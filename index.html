@@ -1,210 +1,1043 @@
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aviator Short</title>
-<style>
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:system-ui;background:#0b0e11;color:#f1f5f9;min-height:100vh}
-  .auth{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1rem}
-  .box{background:#161a1f;border:1px solid #1e293b;border-radius:14px;padding:1.8rem;width:100%;max-width:360px}
-  h1{text-align:center;margin-bottom:.3rem} h1 span{color:#e11d48}
-  .sub{text-align:center;color:#94a3b8;font-size:.9rem;margin-bottom:1.2rem}
-  input{width:100%;padding:.7rem;margin:.4rem 0 1rem;background:#0f1318;border:1px solid #1e293b;border-radius:8px;color:#fff}
-  .btn{width:100%;padding:.8rem;border:none;border-radius:8px;font-weight:600;cursor:pointer;margin-top:.3rem}
-  .btn-p{background:#e11d48;color:#fff}.btn-g{background:#22c55e;color:#052e16}
-  .btn-r{background:#e11d48;color:#fff}.btn:disabled{opacity:.5;cursor:not-allowed}
-  .err{background:#450a0a;color:#fca5a5;padding:.6rem;border-radius:8px;margin-bottom:1rem;display:none}
-  .link{text-align:center;margin-top:1rem;font-size:.9rem;color:#94a3b8}
-  .link a{color:#e11d48;cursor:pointer}
-  #app{display:none}
-  header{background:#161a1f;border-bottom:1px solid #1e293b;padding:.8rem 1.2rem;display:flex;justify-content:space-between;align-items:center}
-  .bal{background:#0f1318;padding:.35rem .9rem;border-radius:20px;font-weight:600}
-  .bal span{color:#22c55e}
-  .layout{display:grid;grid-template-columns:200px 1fr;min-height:calc(100vh - 56px)}
-  nav{background:#161a1f;border-right:1px solid #1e293b;padding:.8rem 0;overflow:auto}
-  nav button{display:block;width:100%;text-align:left;background:0;border:0;color:#94a3b8;padding:.65rem 1rem;cursor:pointer;font-size:.9rem}
-  nav button.active,nav button:hover{background:#1e293b;color:#fff;border-left:3px solid #e11d48}
-  main{padding:1.2rem;overflow:auto}
-  .sec{display:none}.sec.on{display:block}
-  h2{font-size:1.25rem;margin-bottom:.8rem}
-  .card{background:#161a1f;border:1px solid #1e293b;border-radius:12px;padding:1.1rem;margin-bottom:1rem}
-  .game{display:grid;grid-template-columns:1fr 260px;gap:1rem}
-  .screen{background:#0a0d10;border-radius:12px;height:380px;position:relative;overflow:hidden;border:1px solid #1e293b}
-  canvas{width:100%;height:100%}
-  .multi{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:3.2rem;font-weight:800;pointer-events:none}
-  .multi.crash{color:#e11d48}
-  .status{position:absolute;top:10px;left:10px;right:10px;display:flex;justify-content:space-between;font-size:.8rem;z-index:5}
-  .status div{background:rgba(0,0,0,.5);padding:.25rem .6rem;border-radius:6px}
-  .panel h3{margin-bottom:.8rem}
-  .panel input[type=number]{text-align:center;font-size:1.1rem}
-  .quick{display:flex;gap:.3rem;margin:.5rem 0;flex-wrap:wrap}
-  .quick button{flex:1;min-width:42px;padding:.35rem;background:#1e293b;border:0;border-radius:6px;color:#fff;cursor:pointer}
-  table{width:100%;border-collapse:collapse;font-size:.85rem}
-  th,td{padding:.5rem;border-bottom:1px solid #1e293b;text-align:left}
-  .win{color:#22c55e}.loss{color:#e11d48}
-  @media(max-width:800px){.layout{grid-template-columns:1fr}nav{display:flex;overflow-x:auto;border-right:0;border-bottom:1px solid #1e293b}nav button{white-space:nowrap;border-left:0!important}.game{grid-template-columns:1fr}}
-</style>
-</head>
-<body>
+/* =========================================================
+   BETA AVIATOR — COMPLETE VIRTUAL SIMULATOR JAVASCRIPT
+   Virtual points only — no real-money transactions
+========================================================= */
 
-<!-- AUTH -->
-<div class="auth" id="auth">
-  <div class="box">
-    <h1>Aviator <span>Short</span></h1>
-    <p class="sub">Login or register to play</p>
-    <div class="err" id="err"></div>
-    <div id="loginBox">
-      <input id="le" type="email" placeholder="Email" value="demo@aviator.com">
-      <input id="lp" type="password" placeholder="Password" value="demo1234">
-      <button class="btn btn-p" onclick="login()">Log In</button>
-      <div class="link">No account? <a onclick="tog(1)">Register</a></div>
-    </div>
-    <div id="regBox" style="display:none">
-      <input id="re" type="email" placeholder="Email">
-      <input id="rp" type="password" placeholder="Password (min 6)">
-      <input id="rn" type="text" placeholder="Name">
-      <button class="btn btn-p" onclick="reg()">Create Account</button>
-      <div class="link">Have account? <a onclick="tog(0)">Log In</a></div>
-    </div>
-  </div>
-</div>
+let user = null;
+let selectedPoints = 100;
+let multiplier = 1;
+let running = false;
+let flightTimer = null;
+let sessionFlights = 0;
+let graphPoints = [];
 
-<!-- APP -->
-<div id="app">
-  <header>
-    <div><b>Aviator</b> <span style="color:#e11d48">Short</span></div>
-    <div style="display:flex;gap:1rem;align-items:center">
-      <div class="bal">$<span id="bal">0.00</span></div>
-      <button class="btn" style="width:auto;padding:.4rem .9rem;background:#1e293b;color:#fff" onclick="logout()">Logout</button>
-    </div>
-  </header>
-  <div class="layout">
-    <nav id="nav"></nav>
-    <main id="main"></main>
-  </div>
-</div>
 
-<script>
-const S = [
-  {id:1,t:"Registration"},{id:2,t:"Login"},{id:3,t:"Profile"},{id:4,t:"Identity verification"},
-  {id:5,t:"Virtual wallet"},{id:6,t:"Game area"},{id:7,t:"Game history"},{id:8,t:"Notifications"},
-  {id:9,t:"Security"},{id:10,t:"Responsible-use"},{id:11,t:"Support"},{id:12,t:"Financial notice"}
-];
-let u = null, g = {run:0,m:1,crash:0,bet:0,out:0,hist:[],rid:1000};
+/* =========================================================
+   STORAGE
+========================================================= */
 
-const users = () => JSON.parse(localStorage.av_users||"[]");
-const save = us => localStorage.av_users = JSON.stringify(us);
-const err = m => {const e=document.getElementById("err");e.textContent=m;e.style.display="block"};
-const clear = () => document.getElementById("err").style.display="none";
-const tog = r => {clear();document.getElementById("loginBox").style.display=r?"none":"block";document.getElementById("regBox").style.display=r?"block":"none"};
+function loadUser() {
+    try {
+        const saved = localStorage.getItem("betaAviatorUser");
+        user = saved ? JSON.parse(saved) : null;
+    } catch (error) {
+        user = null;
+        console.error(error);
+    }
+}
 
-function reg(){
-  clear();
-  const e=re.value.trim().toLowerCase(),p=rp.value,n=rn.value.trim()||"Player";
-  if(!e||!p||p.length<6)return err("Invalid data");
-  let us=users();if(us.find(x=>x.email===e))return err("Email exists");
-  u={email:e,pass:p,name:n,bal:1000,ver:0,hist:[],noti:[{t:"Welcome! $1000 credited",d:new Date().toLocaleString()}],lim:{d:5000,l:2000},fa:0};
-  us.push(u);save(us);enter();
+function saveUser() {
+    localStorage.setItem(
+        "betaAviatorUser",
+        JSON.stringify(user)
+    );
+    updateUI();
 }
-function login(){
-  clear();
-  const e=le.value.trim().toLowerCase(),p=lp.value;
-  u=users().find(x=>x.email===e&&x.pass===p);
-  if(!u)return err("Wrong email/password");
-  enter();
-}
-function logout(){u=null;app.style.display="none";auth.style.display="flex";tog(0)}
-function enter(){
-  auth.style.display="none";app.style.display="block";
-  bal.textContent=u.bal.toFixed(2);
-  nav.innerHTML=S.map(s=>`<button data-i="\( {s.id}" onclick="go( \){s.id})"><b>${s.id}</b> ${s.t}</button>`).join("");
-  go(6);
-}
-function saveU(){let us=users(),i=us.findIndex(x=>x.email===u.email);if(i>-1){us[i]=u;save(us)}}
 
-function go(id){
-  [...nav.children].forEach(b=>b.classList.toggle("active",+b.dataset.i===id));
-  main.innerHTML=`<div class="sec on">${html(id)}</div>`;
-  if(id===6)initGame();
-  if(id===7)hist();
-}
-function html(id){
-  if(id===1)return`<h2>1. Registration</h2><div class="card">Logged in as <b>${u.email}</b><br>Created with $1000 bonus.</div>`;
-  if(id===2)return`<h2>2. Login</h2><div class="card">You are logged in.<br><button class="btn btn-p" style="width:auto;margin-top:1rem" onclick="logout()">Logout</button></div>`;
-  if(id===3)return`<h2>3. Profile</h2><div class="card"><input id="pn" value="${u.name}"><br><button class="btn btn-p" style="width:auto;margin-top:.8rem" onclick="u.name=pn.value||u.name;saveU();alert('Saved')">Save</button></div>`;
-  if(id===4)return`<h2>4. Identity verification</h2><div class="card">Status: <b>\( {u.ver?"Verified":"Not verified"}</b> \){u.ver?"":`<br><button class="btn btn-p" style="width:auto;margin-top:.8rem" onclick="u.ver=1;u.noti.unshift({t:'Verified!',d:new Date().toLocaleString()});saveU();go(4)">Simulate Verify</button>`}</div>`;
-  if(id===5)return`<h2>5. Virtual wallet</h2><div class="card"><h3>\( <span id="wb"> \){u.bal.toFixed(2)}</span></h3>
-    <button class="btn btn-g" style="width:auto;margin:.5rem .3rem 0 0" onclick="dep(100)">+$100</button>
-    <button class="btn btn-g" style="width:auto;margin:.5rem .3rem 0 0" onclick="dep(500)">+$500</button>
-    <button class="btn btn-p" style="width:auto;margin:.5rem 0 0" onclick="wd(50)">-$50</button></div>`;
-  if(id===6)return`<h2>6. Game area</h2><div class="game">
-    <div class="screen"><div class="status"><div>Round #<span id="rid">${g.rid}</span></div><div id="st">Waiting...</div></div>
-    <canvas id="cv"></canvas><div class="multi" id="md">1.00×</div></div>
-    <div class="panel card"><h3>Bet</h3><input type="number" id="ba" value="10" min="1">
-    <div class="quick"><button onclick="ba.value=5">5</button><button onclick="ba.value=10">10</button><button onclick="ba.value=25">25</button><button onclick="ba.value=50">50</button><button onclick="ba.value=100">100</button></div>
-    <button class="btn btn-g" id="bb" onclick="bet()">BET</button>
-    <button class="btn btn-r" id="cb" onclick="cash()" disabled>CASH OUT</button>
-    <div style="margin-top:.8rem;font-size:.85rem;color:#94a3b8">Auto @ <input type="number" id="ac" value="2.00" step=".1" style="width:60px;padding:.3rem;background:#0f1318;border:1px solid #1e293b;border-radius:6px;color:#fff"> ×</div></div></div>`;
-  if(id===7)return`<h2>7. Game history</h2><div class="card"><table><thead><tr><th>Round</th><th>Bet</th><th>Out</th><th>P/L</th></tr></thead><tbody id="hb"></tbody></table></div>`;
-  if(id===8)return`<h2>8. Notifications</h2><div class="card">\( {u.noti.map(n=>`<div style="padding:.6rem 0;border-bottom:1px solid #1e293b"> \){n.t}<br><small style="color:#94a3b8">${n.d}</small></div>`).join("")||"None"}</div>`;
-  if(id===9)return`<h2>9. Security</h2><div class="card">2FA: <b>\( {u.fa?"On":"Off"}</b><br><button class="btn btn-p" style="width:auto;margin-top:.8rem" onclick="u.fa=!u.fa;saveU();go(9)"> \){u.fa?"Disable":"Enable"} 2FA</button></div>`;
-  if(id===10)return`<h2>10. Responsible-use</h2><div class="card">Deposit limit: \[ {u.lim.d}<br>Loss limit: \]{u.lim.l}<br><small style="color:#94a3b8">Demo only – not enforced</small></div>`;
-  if(id===11)return`<h2>11. Support</h2><div class="card">Chat / Email: support@demo.example<br><button class="btn btn-p" style="width:auto;margin-top:.8rem" onclick="alert('Ticket sent (demo)')">Create Ticket</button></div>`;
-  if(id===12)return`<h2>12. Financial notice</h2><div class="card">This is a <b>demo</b>. No real money. Play responsibly on real sites only where legal.</div>`;
-  return"";
-}
-function dep(a){u.bal+=a;u.noti.unshift({t:`+\[ {a} deposited`,d:new Date().toLocaleString()});saveU();bal.textContent=u.bal.toFixed(2);if(wb)wb.textContent=u.bal.toFixed(2)}
-function wd(a){if(u.bal<a)return alert("Low balance");u.bal-=a;u.noti.unshift({t:`- \]{a} withdrawn`,d:new Date().toLocaleString()});saveU();bal.textContent=u.bal.toFixed(2);if(wb)wb.textContent=u.bal.toFixed(2)}
 
-/* GAME */
-let cv,ctx,px=40,py=300,pts=[],aid;
-function initGame(){cv=document.getElementById("cv");if(!cv)return;ctx=cv.getContext("2d");cv.width=cv.parentElement.clientWidth;cv.height=cv.parentElement.clientHeight;reset();setTimeout(start,1200)}
-function bet(){
-  if(g.run)return;const a=+ba.value;if(a<1||a>u.bal)return alert("Invalid bet");
-  u.bal-=a;g.bet=a;g.out=0;bal.textContent=u.bal.toFixed(2);saveU();
-  bb.disabled=1;cb.disabled=0;st.textContent="Bet placed";
-}
-function cash(){
-  if(!g.run||g.out||!g.bet)return;g.out=1;
-  const w=g.bet*g.m,p=w-g.bet;u.bal+=w;bal.textContent=u.bal.toFixed(2);
-  u.hist.unshift({r:g.rid,b:g.bet,c:g.m.toFixed(2),p});saveU();
-  cb.disabled=1;st.textContent=`Out @ ${g.m.toFixed(2)}× (+\[ {p.toFixed(2)})`;
-  if(speechSynthesis)speechSynthesis.speak(new SpeechSynthesisUtterance("Cashed out"));
-}
-function start(){
-  g.run=1;g.m=1;g.crash=gen();g.rid++;rid.textContent=g.rid;st.textContent="Flying...";md.classList.remove("crash");md.textContent="1.00×";
-  px=40;py=cv.height-70;pts=[{x:0,y:py}];bb.disabled=1;animate();
-}
-function gen(){const r=Math.random();return r<.05?1:r<.35?1+Math.random()*2:r<.7?3+Math.random()*5:8+Math.random()*40}
-function animate(){
-  if(!g.run)return;g.m+=.012+g.m*.0018;md.textContent=g.m.toFixed(2)+"×";
-  const ac=+document.getElementById("ac")?.value||0;if(ac>1&&g.m>=ac&&g.bet&&!g.out)cash();
-  px+=1.6;py-=.85+g.m*.12;pts.push({x:px,y:py});draw();
-  if(g.m>=g.crash){crash();return}aid=requestAnimationFrame(animate);
-}
-function crash(){
-  g.run=0;cancelAnimationFrame(aid);md.classList.add("crash");st.textContent=`Crashed @ ${g.crash.toFixed(2)}×`;cb.disabled=1;bb.disabled=0;
-  if(g.bet&&!g.out){u.hist.unshift({r:g.rid,b:g.bet,c:"—",p:-g.bet});saveU()}
-  g.bet=0;if(speechSynthesis)speechSynthesis.speak(new SpeechSynthesisUtterance("Flew away"));
-  setTimeout(()=>{reset();setTimeout(start,1800)},2200);
-}
-function reset(){px=40;py=cv?cv.height-70:300;pts=[];md.textContent="1.00×";md.classList.remove("crash");st.textContent="Next...";if(ctx)draw()}
-function draw(){
-  if(!ctx)return;const w=cv.width,h=cv.height;ctx.fillStyle="#0a0d10";ctx.fillRect(0,0,w,h);
-  ctx.strokeStyle="#1a2030";ctx.lineWidth=1;for(let i=0;i<w;i+=40){ctx.beginPath();ctx.moveTo(i,0);ctx.lineTo(i,h);ctx.stroke()}
-  if(pts.length>1){ctx.beginPath();ctx.strokeStyle="#e11d48";ctx.lineWidth=3;ctx.moveTo(pts[0].x,pts[0].y);pts.forEach(p=>ctx.lineTo(p.x,p.y));ctx.stroke();
-  ctx.lineTo(pts.at(-1).x,h);ctx.lineTo(pts[0].x,h);ctx.fillStyle="rgba(225,29,72,.12)";ctx.fill()}
-  if(g.run||pts.length){ctx.save();ctx.translate(px,py);ctx.rotate(-.35);ctx.fillStyle="#f1f5f9";ctx.beginPath();ctx.moveTo(18,0);ctx.lineTo(-12,-7);ctx.lineTo(-12,7);ctx.fill();ctx.fillStyle="#e11d48";ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(-6,-15);ctx.lineTo(4,0);ctx.fill();ctx.restore()}
-}
-function hist(){hb.innerHTML=u.hist.map(h=>`<tr><td>#\( {h.r}</td><td> \]{h.b}</td><td> \){h.c}</td><td class="\( {h.p>=0?"win":"loss"}"> \){h.p>=0?"+":""}${h.p.toFixed(2)}</td></tr>`).join("")||"<tr><td colspan=4>No games</td></tr>"}
+/* =========================================================
+   REGISTRATION — 1
+========================================================= */
 
-/* seed demo */
-if(!users().find(x=>x.email==="demo@aviator.com")){
-  save([{email:"demo@aviator.com",pass:"demo1234",name:"Demo",bal:1000,ver:0,hist:[],noti:[{t:"Welcome! $1000 credited",d:new Date().toLocaleString()}],lim:{d:5000,l:2000},fa:0}]);
+function createAccount() {
+
+    const name = document.getElementById("regName").value.trim();
+    const contact = document.getElementById("regContact").value.trim();
+    const password = document.getElementById("regPassword").value;
+
+    const message = document.getElementById("regMsg");
+
+    if (!name || !contact || !password) {
+        message.style.color = "#ff4d6d";
+        message.textContent = "Please fill in all fields.";
+        return;
+    }
+
+    if (password.length < 4) {
+        message.style.color = "#ff4d6d";
+        message.textContent = "Password must contain at least 4 characters.";
+        return;
+    }
+
+    user = {
+        name: name,
+        contact: contact,
+        password: password,
+
+        balance: 5000,
+
+        xp: 0,
+        level: 1,
+
+        limit: "10",
+
+        history: [],
+
+        notifications: [
+            "Welcome to BETA AVIATOR!",
+            "Your virtual demo account has been created."
+        ]
+    };
+
+    saveUser();
+
+    message.style.color = "#35d51d";
+    message.textContent = "Account created successfully.";
+
+    setTimeout(function () {
+
+        document.getElementById("registerPage")
+            .classList.add("hidden");
+
+        document.getElementById("loginPage")
+            .classList.remove("hidden");
+
+        document.getElementById("loginContact").value = contact;
+        document.getElementById("loginPassword").value = "";
+
+        document.getElementById("loginMsg").textContent =
+            "Account created. Login to continue.";
+
+    }, 700);
 }
-</script>
-</body>
-</html>
+
+
+/* =========================================================
+   LOGIN — 2
+========================================================= */
+
+function loginAccount() {
+
+    const contact =
+        document.getElementById("loginContact").value.trim();
+
+    const password =
+        document.getElementById("loginPassword").value;
+
+    const message =
+        document.getElementById("loginMsg");
+
+    const saved =
+        JSON.parse(
+            localStorage.getItem("betaAviatorUser")
+        );
+
+    if (!saved) {
+        message.style.color = "#ff4d6d";
+        message.textContent =
+            "No account found. Please register first.";
+        return;
+    }
+
+    if (
+        saved.contact === contact &&
+        saved.password === password
+    ) {
+
+        user = saved;
+
+        message.style.color = "#35d51d";
+        message.textContent = "Login successful.";
+
+        setTimeout(function () {
+
+            document.getElementById("registerPage")
+                .classList.add("hidden");
+
+            document.getElementById("loginPage")
+                .classList.add("hidden");
+
+            document.getElementById("app")
+                .classList.remove("hidden");
+
+            updateUI();
+            openPage("home");
+
+        }, 500);
+
+    } else {
+
+        message.style.color = "#ff4d6d";
+        message.textContent =
+            "Incorrect phone/email or password.";
+    }
+}
+
+
+/* =========================================================
+   PAGE SWITCHING
+========================================================= */
+
+function openPage(pageName) {
+
+    document.querySelectorAll(".appPage")
+        .forEach(function(page) {
+            page.classList.add("hidden");
+        });
+
+    const page =
+        document.getElementById(pageName);
+
+    if (page) {
+        page.classList.remove("hidden");
+    }
+
+    if (pageName === "game") {
+        updateGame();
+        setTimeout(drawCurrentGraph, 100);
+    }
+
+    updateUI();
+}
+
+
+/* =========================================================
+   PROFILE — 3
+========================================================= */
+
+function saveProfile() {
+
+    if (!user) return;
+
+    const name =
+        document.getElementById("profileName").value.trim();
+
+    const contact =
+        document.getElementById("profileContact").value.trim();
+
+    if (!name || !contact) {
+        alert("Please complete the profile.");
+        return;
+    }
+
+    user.name = name;
+    user.contact = contact;
+
+    user.notifications.unshift(
+        "Your profile was updated."
+    );
+
+    saveUser();
+
+    alert("Profile saved successfully.");
+}
+
+
+/* =========================================================
+   VERIFICATION — 4
+========================================================= */
+
+function verificationInfo() {
+
+    alert(
+        "This is a virtual simulator. " +
+        "Identity documents are not collected."
+    );
+}
+
+
+/* =========================================================
+   VIRTUAL WALLET — 5
+========================================================= */
+
+function addPoints() {
+
+    if (!user) return;
+
+    user.balance += 1000;
+
+    user.notifications.unshift(
+        "1,000 virtual points added."
+    );
+
+    saveUser();
+
+    alert("1,000 virtual points added.");
+}
+
+
+/* =========================================================
+   GAME POINT CONTROL — 6
+========================================================= */
+
+function changePoints(amount) {
+
+    selectedPoints += amount;
+
+    if (selectedPoints < 100) {
+        selectedPoints = 100;
+    }
+
+    if (selectedPoints > 5000) {
+        selectedPoints = 5000;
+    }
+
+    updatePointDisplay();
+}
+
+
+function setPoints(amount) {
+
+    selectedPoints = amount;
+
+    updatePointDisplay();
+}
+
+
+function updatePointDisplay() {
+
+    const selected =
+        document.getElementById("selectedPoints");
+
+    const startAmount =
+        document.getElementById("startAmount");
+
+    if (selected) {
+        selected.textContent =
+            selectedPoints.toLocaleString();
+    }
+
+    if (startAmount) {
+        startAmount.textContent =
+            selectedPoints.toLocaleString() + " PTS";
+    }
+}
+
+
+/* =========================================================
+   START VIRTUAL FLIGHT
+========================================================= */
+
+function startFlight() {
+
+    if (!user || running) return;
+
+    if (
+        user.limit !== "unlimited" &&
+        sessionFlights >= Number(user.limit)
+    ) {
+
+        setFlightStatus(
+            "SESSION FLIGHT LIMIT REACHED"
+        );
+
+        speak(
+            "Your session flight limit has been reached."
+        );
+
+        return;
+    }
+
+    if (user.balance < selectedPoints) {
+
+        setFlightStatus(
+            "NOT ENOUGH VIRTUAL POINTS"
+        );
+
+        speak("Not enough virtual points.");
+
+        return;
+    }
+
+    user.balance -= selectedPoints;
+
+    sessionFlights++;
+
+    multiplier = 1;
+
+    graphPoints = [];
+
+    running = true;
+
+    saveUser();
+
+    const startButton =
+        document.getElementById("startButton");
+
+    const landButton =
+        document.getElementById("landButton");
+
+    if (startButton) {
+        startButton.classList.add("hidden");
+    }
+
+    if (landButton) {
+        landButton.classList.remove("hidden");
+    }
+
+    setFlightStatus("FLIGHT IN PROGRESS");
+
+    speak("Flight started.");
+
+    beginFlightAnimation();
+}
+
+
+/* =========================================================
+   FLIGHT ANIMATION + GRAPH + AIRPLANE
+========================================================= */
+
+function beginFlightAnimation() {
+
+    clearInterval(flightTimer);
+
+    const canvas =
+        document.getElementById("flightCanvas");
+
+    if (!canvas) return;
+
+    const ctx =
+        canvas.getContext("2d");
+
+    resizeCanvas();
+
+    let x = 30;
+
+    graphPoints = [];
+
+    flightTimer = setInterval(function() {
+
+        if (!running) return;
+
+        multiplier +=
+            0.01 + Math.random() * 0.055;
+
+        const multiplierElement =
+            document.getElementById("multiplier");
+
+        if (multiplierElement) {
+            multiplierElement.textContent =
+                multiplier.toFixed(2) + "x";
+        }
+
+        x += 7;
+
+        if (x > canvas.width + 50) {
+            x = 30;
+        }
+
+        const progress =
+            Math.min(multiplier / 8, 1);
+
+        const y =
+            canvas.height -
+            45 -
+            progress * (canvas.height - 100);
+
+        graphPoints.push({
+            x: x,
+            y: y
+        });
+
+        if (graphPoints.length > 120) {
+            graphPoints.shift();
+        }
+
+        drawCanvas(ctx, canvas);
+
+        setFlightStatus(
+            "FLIGHT • " +
+            multiplier.toFixed(2) +
+            "x"
+        );
+
+    }, 180);
+}
+
+
+/* =========================================================
+   DRAW GRAPH
+========================================================= */
+
+function drawCanvas(ctx, canvas) {
+
+    ctx.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+
+    /* Background rays */
+
+    ctx.strokeStyle =
+        "rgba(255,255,255,0.07)";
+
+    ctx.lineWidth = 1;
+
+    for (let i = 0; i < 12; i++) {
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            0,
+            canvas.height
+        );
+
+        ctx.lineTo(
+            canvas.width,
+            canvas.height - i * 35
+        );
+
+        ctx.stroke();
+    }
+
+
+    /* Graph */
+
+    if (graphPoints.length < 2) {
+        drawAirplane(
+            ctx,
+            50,
+            canvas.height - 55
+        );
+        return;
+    }
+
+    ctx.beginPath();
+
+    graphPoints.forEach(function(point, index) {
+
+        if (index === 0) {
+            ctx.moveTo(
+                point.x,
+                point.y
+            );
+        } else {
+            ctx.lineTo(
+                point.x,
+                point.y
+            );
+        }
+    });
+
+    ctx.strokeStyle = "#e71955";
+    ctx.lineWidth = 5;
+
+    ctx.shadowBlur = 15;
+    ctx.shadowColor = "#e71955";
+
+    ctx.stroke();
+
+    ctx.shadowBlur = 0;
+
+
+    /* Airplane */
+
+    const last =
+        graphPoints[graphPoints.length - 1];
+
+    drawAirplane(
+        ctx,
+        last.x,
+        last.y
+    );
+}
+
+
+/* =========================================================
+   AIRPLANE
+========================================================= */
+
+function drawAirplane(ctx, x, y) {
+
+    ctx.save();
+
+    ctx.translate(x, y);
+
+    ctx.rotate(-0.25);
+
+    ctx.font = "42px Arial";
+
+    ctx.fillStyle = "#ffffff";
+
+    ctx.shadowBlur = 12;
+    ctx.shadowColor = "#e71955";
+
+    ctx.fillText("✈", -18, 15);
+
+    ctx.restore();
+
+    ctx.shadowBlur = 0;
+}
+
+
+/* =========================================================
+   CANVAS SIZE
+========================================================= */
+
+function resizeCanvas() {
+
+    const canvas =
+        document.getElementById("flightCanvas");
+
+    if (!canvas) return;
+
+    canvas.width =
+        canvas.clientWidth;
+
+    canvas.height =
+        canvas.clientHeight;
+
+    drawCurrentGraph();
+}
+
+
+function drawCurrentGraph() {
+
+    const canvas =
+        document.getElementById("flightCanvas");
+
+    if (!canvas) return;
+
+    const ctx =
+        canvas.getContext("2d");
+
+    drawCanvas(ctx, canvas);
+}
+
+
+/* =========================================================
+   LAND VIRTUAL FLIGHT
+========================================================= */
+
+function landFlight() {
+
+    if (!running || !user) return;
+
+    running = false;
+
+    clearInterval(flightTimer);
+
+    const earned =
+        Math.floor(
+            selectedPoints * multiplier
+        );
+
+    user.balance += earned;
+
+    user.xp +=
+        Math.floor(multiplier * 10);
+
+
+    /* Level system */
+
+    if (user.xp >= 1000) {
+
+        user.level += 1;
+
+        user.xp = 0;
+
+        user.notifications.unshift(
+            "Congratulations! You reached Level " +
+            user.level + "."
+        );
+    }
+
+
+    /* History */
+
+    user.history.unshift({
+
+        date:
+            new Date().toLocaleString(),
+
+        multiplier:
+            multiplier.toFixed(2) + "x",
+
+        points:
+            earned
+    });
+
+
+    user.notifications.unshift(
+        "Flight completed at " +
+        multiplier.toFixed(2) +
+        "x."
+    );
+
+
+    saveUser();
+
+
+    const startButton =
+        document.getElementById("startButton");
+
+    const landButton =
+        document.getElementById("landButton");
+
+    if (startButton) {
+        startButton.classList.remove("hidden");
+    }
+
+    if (landButton) {
+        landButton.classList.add("hidden");
+    }
+
+
+    setFlightStatus(
+        "LANDED • +" +
+        earned +
+        " VIRTUAL POINTS"
+    );
+
+
+    speak(
+        "Flight landed at " +
+        multiplier.toFixed(2) +
+        " times."
+    );
+
+    updateGame();
+}
+
+
+/* =========================================================
+   FLIGHT STATUS
+========================================================= */
+
+function setFlightStatus(text) {
+
+    const element =
+        document.getElementById("flightStatus");
+
+    if (element) {
+        element.textContent = text;
+    }
+}
+
+
+/* =========================================================
+   VOICE
+========================================================= */
+
+function speak(text) {
+
+    if (
+        typeof window.speechSynthesis ===
+        "undefined"
+    ) {
+        return;
+    }
+
+    window.speechSynthesis.cancel();
+
+    const speech =
+        new SpeechSynthesisUtterance(text);
+
+    speech.rate = 0.9;
+    speech.pitch = 1;
+    speech.volume = 1;
+
+    window.speechSynthesis.speak(speech);
+}
+
+
+/* =========================================================
+   HISTORY — 7
+========================================================= */
+
+function updateHistory() {
+
+    const table =
+        document.getElementById("historyTable");
+
+    if (!table || !user) return;
+
+    table.innerHTML = "";
+
+    if (user.history.length === 0) {
+
+        table.innerHTML =
+            "<tr><td colspan='3'>No flights yet.</td></tr>";
+
+        return;
+    }
+
+    user.history.forEach(function(item) {
+
+        const row =
+            document.createElement("tr");
+
+        row.innerHTML =
+            "<td>" + item.date + "</td>" +
+            "<td>" + item.multiplier + "</td>" +
+            "<td>+" +
+            item.points +
+            " PTS</td>";
+
+        table.appendChild(row);
+    });
+}
+
+
+/* =========================================================
+   RECENT FLIGHTS
+========================================================= */
+
+function updateFlightList() {
+
+    const list =
+        document.getElementById("flightList");
+
+    if (!list || !user) return;
+
+    list.innerHTML = "";
+
+    if (user.history.length === 0) {
+
+        list.innerHTML =
+            "<p>No flights yet.</p>";
+
+        return;
+    }
+
+    user.history
+        .slice(0, 8)
+        .forEach(function(item) {
+
+            const row =
+                document.createElement("div");
+
+            row.className = "flight-row";
+
+            row.innerHTML =
+                "<span>✈ " +
+                item.date +
+                "</span>" +
+
+                "<span>" +
+                item.multiplier +
+                "</span>" +
+
+                "<span>+" +
+                item.points +
+                " PTS</span>";
+
+            list.appendChild(row);
+        });
+}
+
+
+/* =========================================================
+   NOTIFICATIONS — 8
+========================================================= */
+
+function updateNotifications() {
+
+    const list =
+        document.getElementById(
+            "notificationList"
+        );
+
+    if (!list || !user) return;
+
+    list.innerHTML = "";
+
+    user.notifications
+        .slice(0, 15)
+        .forEach(function(message) {
+
+            const item =
+                document.createElement("div");
+
+            item.className = "card";
+
+            item.textContent = message;
+
+            list.appendChild(item);
+        });
+}
+
+
+/* =========================================================
+   SECURITY — 9
+========================================================= */
+
+function changePassword() {
+
+    if (!user) return;
+
+    const newPassword =
+        document.getElementById(
+            "newPassword"
+        ).value;
+
+    if (newPassword.length < 4) {
+
+        alert(
+            "Password must contain at least 4 characters."
+        );
+
+        return;
+    }
+
+    user.password = newPassword;
+
+    user.notifications.unshift(
+        "Your password was changed."
+    );
+
+    saveUser();
+
+    document.getElementById(
+        "newPassword"
+    ).value = "";
+
+    alert("Password changed successfully.");
+}
+
+
+/* =========================================================
+   RESPONSIBLE USE — 10
+========================================================= */
+
+function saveLimit() {
+
+    if (!user) return;
+
+    const limit =
+        document.getElementById(
+            "flightLimit"
+        ).value;
+
+    user.limit = limit;
+
+    saveUser();
+
+    alert("Virtual flight limit saved.");
+}
+
+
+function pauseGame() {
+
+    running = false;
+
+    clearInterval(flightTimer);
+
+    setFlightStatus(
+        "SIMULATOR PAUSED"
+    );
+
+    const message =
+        document.getElementById("pauseMsg");
+
+    if (message) {
+        message.textContent =
+            "The simulator has been paused.";
+    }
+}
+
+
+/* =========================================================
+   SUPPORT — 11
+========================================================= */
+
+function sendSupport() {
+
+    if (!user) return;
+
+    const subject =
+        document.getElementById(
+            "supportSubject"
+        ).value.trim();
+
+    const message =
+        document.getElementById(
+            "supportText"
+        ).value.trim();
+
+    const result =
+        document.getElementById(
+            "supportMsg"
+        );
+
+    if (!subject || !message) {
+
+        result.textContent =
+            "Please complete both fields.";
+
+        return;
+    }
+
+    user.notifications.unshift(
+        "Support request submitted: " +
+        subject
+    );
+
+    saveUser();
+
+    result.style.color = "#35d51d";
+
+    result.textContent =
+        "Support request submitted successfully.";
+
+    document.getElementById(
+        "supportSubject"
+    ).value = "";
+
+    document.getElementById(
+        "supportText"
+    ).value = "";
+}
+
+
+/* =========================================================
+   FINANCIAL SECTION — 12
+========================================================= */
+
+function showFinancialInfo() {
+
+    alert(
+        "This is a virtual simulator. " +
+        "No real-money deposits, withdrawals, " +
+        "payments or cash prizes are enabled."
+    );
+}
+
+
+/* =========================================================
+   GAME UPDATE
+========================================================= */
+
+function updateGame() {
+
+    if (!user) return;
+
+    const balance =
+        user.balance.toLocaleString();
+
+    const gameBalance =
+        document.getElementById(
+            "gameBalance"
+        );
+
+    if (gameBalance) {
+        gameBalance.textContent = balance;
+    }
+
+    updatePointDisplay();
+    updateFlightList();
+}
+
+
+/* =========================================================
+   COMPLETE UI UPDATE
+========================================================= */
+
+function updateUI() {
+
+    if (!user) return;
+
+    const headerBalance =
+        document.getElementById(
+            "headerBalance"
+        );
+
+    if (headerBalance) {
+        headerBalance.textContent =
+            user.balance.toLocaleString() +
+            " PTS";
+ 
