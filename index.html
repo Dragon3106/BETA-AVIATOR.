@@ -1,594 +1,210 @@
-/* =========================================================
-   BETA AVIATOR DEMO — 12 FUNCTIONAL SECTIONS
-   DEMO / EDUCATIONAL VERSION — NO REAL MONEY
-========================================================= */
 
-const APP = {
-  user: JSON.parse(localStorage.getItem("aviatorUser")) || null,
-  history: JSON.parse(localStorage.getItem("aviatorHistory")) || [],
-  notifications: JSON.parse(localStorage.getItem("aviatorNotifications")) || [],
-  playing: false,
-  multiplier: 1.00,
-  gameTimer: null,
-  points: 5000
-};
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aviator Short</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:system-ui;background:#0b0e11;color:#f1f5f9;min-height:100vh}
+  .auth{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1rem}
+  .box{background:#161a1f;border:1px solid #1e293b;border-radius:14px;padding:1.8rem;width:100%;max-width:360px}
+  h1{text-align:center;margin-bottom:.3rem} h1 span{color:#e11d48}
+  .sub{text-align:center;color:#94a3b8;font-size:.9rem;margin-bottom:1.2rem}
+  input{width:100%;padding:.7rem;margin:.4rem 0 1rem;background:#0f1318;border:1px solid #1e293b;border-radius:8px;color:#fff}
+  .btn{width:100%;padding:.8rem;border:none;border-radius:8px;font-weight:600;cursor:pointer;margin-top:.3rem}
+  .btn-p{background:#e11d48;color:#fff}.btn-g{background:#22c55e;color:#052e16}
+  .btn-r{background:#e11d48;color:#fff}.btn:disabled{opacity:.5;cursor:not-allowed}
+  .err{background:#450a0a;color:#fca5a5;padding:.6rem;border-radius:8px;margin-bottom:1rem;display:none}
+  .link{text-align:center;margin-top:1rem;font-size:.9rem;color:#94a3b8}
+  .link a{color:#e11d48;cursor:pointer}
+  #app{display:none}
+  header{background:#161a1f;border-bottom:1px solid #1e293b;padding:.8rem 1.2rem;display:flex;justify-content:space-between;align-items:center}
+  .bal{background:#0f1318;padding:.35rem .9rem;border-radius:20px;font-weight:600}
+  .bal span{color:#22c55e}
+  .layout{display:grid;grid-template-columns:200px 1fr;min-height:calc(100vh - 56px)}
+  nav{background:#161a1f;border-right:1px solid #1e293b;padding:.8rem 0;overflow:auto}
+  nav button{display:block;width:100%;text-align:left;background:0;border:0;color:#94a3b8;padding:.65rem 1rem;cursor:pointer;font-size:.9rem}
+  nav button.active,nav button:hover{background:#1e293b;color:#fff;border-left:3px solid #e11d48}
+  main{padding:1.2rem;overflow:auto}
+  .sec{display:none}.sec.on{display:block}
+  h2{font-size:1.25rem;margin-bottom:.8rem}
+  .card{background:#161a1f;border:1px solid #1e293b;border-radius:12px;padding:1.1rem;margin-bottom:1rem}
+  .game{display:grid;grid-template-columns:1fr 260px;gap:1rem}
+  .screen{background:#0a0d10;border-radius:12px;height:380px;position:relative;overflow:hidden;border:1px solid #1e293b}
+  canvas{width:100%;height:100%}
+  .multi{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:3.2rem;font-weight:800;pointer-events:none}
+  .multi.crash{color:#e11d48}
+  .status{position:absolute;top:10px;left:10px;right:10px;display:flex;justify-content:space-between;font-size:.8rem;z-index:5}
+  .status div{background:rgba(0,0,0,.5);padding:.25rem .6rem;border-radius:6px}
+  .panel h3{margin-bottom:.8rem}
+  .panel input[type=number]{text-align:center;font-size:1.1rem}
+  .quick{display:flex;gap:.3rem;margin:.5rem 0;flex-wrap:wrap}
+  .quick button{flex:1;min-width:42px;padding:.35rem;background:#1e293b;border:0;border-radius:6px;color:#fff;cursor:pointer}
+  table{width:100%;border-collapse:collapse;font-size:.85rem}
+  th,td{padding:.5rem;border-bottom:1px solid #1e293b;text-align:left}
+  .win{color:#22c55e}.loss{color:#e11d48}
+  @media(max-width:800px){.layout{grid-template-columns:1fr}nav{display:flex;overflow-x:auto;border-right:0;border-bottom:1px solid #1e293b}nav button{white-space:nowrap;border-left:0!important}.game{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
 
-/* ---------- HELPERS ---------- */
+<!-- AUTH -->
+<div class="auth" id="auth">
+  <div class="box">
+    <h1>Aviator <span>Short</span></h1>
+    <p class="sub">Login or register to play</p>
+    <div class="err" id="err"></div>
+    <div id="loginBox">
+      <input id="le" type="email" placeholder="Email" value="demo@aviator.com">
+      <input id="lp" type="password" placeholder="Password" value="demo1234">
+      <button class="btn btn-p" onclick="login()">Log In</button>
+      <div class="link">No account? <a onclick="tog(1)">Register</a></div>
+    </div>
+    <div id="regBox" style="display:none">
+      <input id="re" type="email" placeholder="Email">
+      <input id="rp" type="password" placeholder="Password (min 6)">
+      <input id="rn" type="text" placeholder="Name">
+      <button class="btn btn-p" onclick="reg()">Create Account</button>
+      <div class="link">Have account? <a onclick="tog(0)">Log In</a></div>
+    </div>
+  </div>
+</div>
 
-function save() {
-  localStorage.setItem("aviatorUser", JSON.stringify(APP.user));
-  localStorage.setItem("aviatorHistory", JSON.stringify(APP.history));
-  localStorage.setItem(
-    "aviatorNotifications",
-    JSON.stringify(APP.notifications)
-  );
+<!-- APP -->
+<div id="app">
+  <header>
+    <div><b>Aviator</b> <span style="color:#e11d48">Short</span></div>
+    <div style="display:flex;gap:1rem;align-items:center">
+      <div class="bal">$<span id="bal">0.00</span></div>
+      <button class="btn" style="width:auto;padding:.4rem .9rem;background:#1e293b;color:#fff" onclick="logout()">Logout</button>
+    </div>
+  </header>
+  <div class="layout">
+    <nav id="nav"></nav>
+    <main id="main"></main>
+  </div>
+</div>
+
+<script>
+const S = [
+  {id:1,t:"Registration"},{id:2,t:"Login"},{id:3,t:"Profile"},{id:4,t:"Identity verification"},
+  {id:5,t:"Virtual wallet"},{id:6,t:"Game area"},{id:7,t:"Game history"},{id:8,t:"Notifications"},
+  {id:9,t:"Security"},{id:10,t:"Responsible-use"},{id:11,t:"Support"},{id:12,t:"Financial notice"}
+];
+let u = null, g = {run:0,m:1,crash:0,bet:0,out:0,hist:[],rid:1000};
+
+const users = () => JSON.parse(localStorage.av_users||"[]");
+const save = us => localStorage.av_users = JSON.stringify(us);
+const err = m => {const e=document.getElementById("err");e.textContent=m;e.style.display="block"};
+const clear = () => document.getElementById("err").style.display="none";
+const tog = r => {clear();document.getElementById("loginBox").style.display=r?"none":"block";document.getElementById("regBox").style.display=r?"block":"none"};
+
+function reg(){
+  clear();
+  const e=re.value.trim().toLowerCase(),p=rp.value,n=rn.value.trim()||"Player";
+  if(!e||!p||p.length<6)return err("Invalid data");
+  let us=users();if(us.find(x=>x.email===e))return err("Email exists");
+  u={email:e,pass:p,name:n,bal:1000,ver:0,hist:[],noti:[{t:"Welcome! $1000 credited",d:new Date().toLocaleString()}],lim:{d:5000,l:2000},fa:0};
+  us.push(u);save(us);enter();
 }
-
-function $(id) {
-  return document.getElementById(id);
+function login(){
+  clear();
+  const e=le.value.trim().toLowerCase(),p=lp.value;
+  u=users().find(x=>x.email===e&&x.pass===p);
+  if(!u)return err("Wrong email/password");
+  enter();
 }
-
-function notify(message) {
-  APP.notifications.unshift({
-    message,
-    time: new Date().toLocaleTimeString()
-  });
-
-  APP.notifications = APP.notifications.slice(0, 20);
-  save();
-  renderNotifications();
+function logout(){u=null;app.style.display="none";auth.style.display="flex";tog(0)}
+function enter(){
+  auth.style.display="none";app.style.display="block";
+  bal.textContent=u.bal.toFixed(2);
+  nav.innerHTML=S.map(s=>`<button data-i="\( {s.id}" onclick="go( \){s.id})"><b>${s.id}</b> ${s.t}</button>`).join("");
+  go(6);
 }
+function saveU(){let us=users(),i=us.findIndex(x=>x.email===u.email);if(i>-1){us[i]=u;save(us)}}
 
-function speak(message) {
-  if ("speechSynthesis" in window) {
-    speechSynthesis.cancel();
-
-    const voice = new SpeechSynthesisUtterance(message);
-    voice.rate = 1;
-    voice.pitch = 1;
-
-    speechSynthesis.speak(voice);
-  }
+function go(id){
+  [...nav.children].forEach(b=>b.classList.toggle("active",+b.dataset.i===id));
+  main.innerHTML=`<div class="sec on">${html(id)}</div>`;
+  if(id===6)initGame();
+  if(id===7)hist();
 }
-
-/* =========================================================
-   1. REGISTRATION
-========================================================= */
-
-function register() {
-  const username = $("registerUsername")?.value.trim();
-  const phone = $("registerPhone")?.value.trim();
-  const password = $("registerPassword")?.value;
-
-  if (!username || !phone || !password) {
-    alert("Please complete all registration fields.");
-    return;
-  }
-
-  if (password.length < 4) {
-    alert("Password must contain at least 4 characters.");
-    return;
-  }
-
-  APP.user = {
-    username,
-    phone,
-    password,
-    verified: false,
-    points: 5000,
-    created: new Date().toISOString()
-  };
-
-  APP.points = 5000;
-
-  save();
-
-  notify("Account created successfully.");
-  alert("Account created. You received 5,000 DEMO points.");
-
-  showSection("login");
+function html(id){
+  if(id===1)return`<h2>1. Registration</h2><div class="card">Logged in as <b>${u.email}</b><br>Created with $1000 bonus.</div>`;
+  if(id===2)return`<h2>2. Login</h2><div class="card">You are logged in.<br><button class="btn btn-p" style="width:auto;margin-top:1rem" onclick="logout()">Logout</button></div>`;
+  if(id===3)return`<h2>3. Profile</h2><div class="card"><input id="pn" value="${u.name}"><br><button class="btn btn-p" style="width:auto;margin-top:.8rem" onclick="u.name=pn.value||u.name;saveU();alert('Saved')">Save</button></div>`;
+  if(id===4)return`<h2>4. Identity verification</h2><div class="card">Status: <b>\( {u.ver?"Verified":"Not verified"}</b> \){u.ver?"":`<br><button class="btn btn-p" style="width:auto;margin-top:.8rem" onclick="u.ver=1;u.noti.unshift({t:'Verified!',d:new Date().toLocaleString()});saveU();go(4)">Simulate Verify</button>`}</div>`;
+  if(id===5)return`<h2>5. Virtual wallet</h2><div class="card"><h3>\( <span id="wb"> \){u.bal.toFixed(2)}</span></h3>
+    <button class="btn btn-g" style="width:auto;margin:.5rem .3rem 0 0" onclick="dep(100)">+$100</button>
+    <button class="btn btn-g" style="width:auto;margin:.5rem .3rem 0 0" onclick="dep(500)">+$500</button>
+    <button class="btn btn-p" style="width:auto;margin:.5rem 0 0" onclick="wd(50)">-$50</button></div>`;
+  if(id===6)return`<h2>6. Game area</h2><div class="game">
+    <div class="screen"><div class="status"><div>Round #<span id="rid">${g.rid}</span></div><div id="st">Waiting...</div></div>
+    <canvas id="cv"></canvas><div class="multi" id="md">1.00×</div></div>
+    <div class="panel card"><h3>Bet</h3><input type="number" id="ba" value="10" min="1">
+    <div class="quick"><button onclick="ba.value=5">5</button><button onclick="ba.value=10">10</button><button onclick="ba.value=25">25</button><button onclick="ba.value=50">50</button><button onclick="ba.value=100">100</button></div>
+    <button class="btn btn-g" id="bb" onclick="bet()">BET</button>
+    <button class="btn btn-r" id="cb" onclick="cash()" disabled>CASH OUT</button>
+    <div style="margin-top:.8rem;font-size:.85rem;color:#94a3b8">Auto @ <input type="number" id="ac" value="2.00" step=".1" style="width:60px;padding:.3rem;background:#0f1318;border:1px solid #1e293b;border-radius:6px;color:#fff"> ×</div></div></div>`;
+  if(id===7)return`<h2>7. Game history</h2><div class="card"><table><thead><tr><th>Round</th><th>Bet</th><th>Out</th><th>P/L</th></tr></thead><tbody id="hb"></tbody></table></div>`;
+  if(id===8)return`<h2>8. Notifications</h2><div class="card">\( {u.noti.map(n=>`<div style="padding:.6rem 0;border-bottom:1px solid #1e293b"> \){n.t}<br><small style="color:#94a3b8">${n.d}</small></div>`).join("")||"None"}</div>`;
+  if(id===9)return`<h2>9. Security</h2><div class="card">2FA: <b>\( {u.fa?"On":"Off"}</b><br><button class="btn btn-p" style="width:auto;margin-top:.8rem" onclick="u.fa=!u.fa;saveU();go(9)"> \){u.fa?"Disable":"Enable"} 2FA</button></div>`;
+  if(id===10)return`<h2>10. Responsible-use</h2><div class="card">Deposit limit: \[ {u.lim.d}<br>Loss limit: \]{u.lim.l}<br><small style="color:#94a3b8">Demo only – not enforced</small></div>`;
+  if(id===11)return`<h2>11. Support</h2><div class="card">Chat / Email: support@demo.example<br><button class="btn btn-p" style="width:auto;margin-top:.8rem" onclick="alert('Ticket sent (demo)')">Create Ticket</button></div>`;
+  if(id===12)return`<h2>12. Financial notice</h2><div class="card">This is a <b>demo</b>. No real money. Play responsibly on real sites only where legal.</div>`;
+  return"";
 }
+function dep(a){u.bal+=a;u.noti.unshift({t:`+\[ {a} deposited`,d:new Date().toLocaleString()});saveU();bal.textContent=u.bal.toFixed(2);if(wb)wb.textContent=u.bal.toFixed(2)}
+function wd(a){if(u.bal<a)return alert("Low balance");u.bal-=a;u.noti.unshift({t:`- \]{a} withdrawn`,d:new Date().toLocaleString()});saveU();bal.textContent=u.bal.toFixed(2);if(wb)wb.textContent=u.bal.toFixed(2)}
 
-/* =========================================================
-   2. LOGIN
-========================================================= */
-
-function login() {
-  const phone = $("loginPhone")?.value.trim();
-  const password = $("loginPassword")?.value;
-
-  if (!APP.user) {
-    alert("No demo account exists. Please register first.");
-    return;
-  }
-
-  if (
-    phone === APP.user.phone &&
-    password === APP.user.password
-  ) {
-    APP.points = APP.user.points;
-
-    notify("Successful login.");
-    showSection("profile");
-
-    speak("Welcome to Beta Aviator demo.");
-  } else {
-    alert("Incorrect phone number or password.");
-  }
+/* GAME */
+let cv,ctx,px=40,py=300,pts=[],aid;
+function initGame(){cv=document.getElementById("cv");if(!cv)return;ctx=cv.getContext("2d");cv.width=cv.parentElement.clientWidth;cv.height=cv.parentElement.clientHeight;reset();setTimeout(start,1200)}
+function bet(){
+  if(g.run)return;const a=+ba.value;if(a<1||a>u.bal)return alert("Invalid bet");
+  u.bal-=a;g.bet=a;g.out=0;bal.textContent=u.bal.toFixed(2);saveU();
+  bb.disabled=1;cb.disabled=0;st.textContent="Bet placed";
 }
-
-/* =========================================================
-   3. PROFILE
-========================================================= */
-
-function renderProfile() {
-  if (!APP.user) return;
-
-  if ($("profileUsername"))
-    $("profileUsername").textContent = APP.user.username;
-
-  if ($("profilePhone"))
-    $("profilePhone").textContent = APP.user.phone;
-
-  if ($("profilePoints"))
-    $("profilePoints").textContent = APP.user.points.toLocaleString();
-
-  if ($("verificationStatus")) {
-    $("verificationStatus").textContent =
-      APP.user.verified ? "Verified demo account" : "Not verified";
-  }
+function cash(){
+  if(!g.run||g.out||!g.bet)return;g.out=1;
+  const w=g.bet*g.m,p=w-g.bet;u.bal+=w;bal.textContent=u.bal.toFixed(2);
+  u.hist.unshift({r:g.rid,b:g.bet,c:g.m.toFixed(2),p});saveU();
+  cb.disabled=1;st.textContent=`Out @ ${g.m.toFixed(2)}× (+\[ {p.toFixed(2)})`;
+  if(speechSynthesis)speechSynthesis.speak(new SpeechSynthesisUtterance("Cashed out"));
 }
-
-/* =========================================================
-   4. IDENTITY VERIFICATION
-========================================================= */
-
-function verifyDemoIdentity() {
-  if (!APP.user) {
-    alert("Please log in first.");
-    return;
-  }
-
-  APP.user.verified = true;
-  save();
-
-  notify("Demo identity verification completed.");
-  renderProfile();
-
-  alert("Demo verification completed.");
+function start(){
+  g.run=1;g.m=1;g.crash=gen();g.rid++;rid.textContent=g.rid;st.textContent="Flying...";md.classList.remove("crash");md.textContent="1.00×";
+  px=40;py=cv.height-70;pts=[{x:0,y:py}];bb.disabled=1;animate();
 }
-
-/* =========================================================
-   5. VIRTUAL WALLET
-========================================================= */
-
-function renderWallet() {
-  if ($("walletBalance")) {
-    $("walletBalance").textContent =
-      `${APP.user ? APP.user.points.toLocaleString() : 0} DEMO points`;
-  }
+function gen(){const r=Math.random();return r<.05?1:r<.35?1+Math.random()*2:r<.7?3+Math.random()*5:8+Math.random()*40}
+function animate(){
+  if(!g.run)return;g.m+=.012+g.m*.0018;md.textContent=g.m.toFixed(2)+"×";
+  const ac=+document.getElementById("ac")?.value||0;if(ac>1&&g.m>=ac&&g.bet&&!g.out)cash();
+  px+=1.6;py-=.85+g.m*.12;pts.push({x:px,y:py});draw();
+  if(g.m>=g.crash){crash();return}aid=requestAnimationFrame(animate);
 }
-
-/*
-   IMPORTANT:
-   These are points only.
-   There is deliberately no deposit,
-   withdrawal or payment function.
-*/
-
-/* =========================================================
-   6. GAME AREA — PLANE + GRAPH + VOICE
-========================================================= */
-
-function startGame() {
-  if (APP.playing) return;
-
-  if (!APP.user) {
-    alert("Please create an account and log in first.");
-    return;
-  }
-
-  APP.playing = true;
-  APP.multiplier = 1.00;
-
-  const canvas = $("gameCanvas");
-
-  if (!canvas) {
-    alert("Game canvas with id='gameCanvas' was not found.");
-    APP.playing = false;
-    return;
-  }
-
-  const ctx = canvas.getContext("2d");
-
-  speak("Game starting.");
-
-  notify("Demo game started.");
-
-  let x = 30;
-  let y = canvas.height - 40;
-
-  APP.gameTimer = setInterval(() => {
-
-    if (!APP.playing) return;
-
-    APP.multiplier += 0.01 + Math.random() * 0.03;
-
-    x += 4;
-    y -= 1.5 + Math.random() * 2;
-
-    if (x > canvas.width - 70) {
-      x = 30;
-      y = canvas.height - 40;
-    }
-
-    drawGame(ctx, canvas, x, y);
-
-    if ($("multiplier")) {
-      $("multiplier").textContent =
-        APP.multiplier.toFixed(2) + "x";
-    }
-
-    if ($("gameVoice")) {
-      $("gameVoice").textContent =
-        "Multiplier " + APP.multiplier.toFixed(2);
-    }
-
-    if (Math.random() < 0.04) {
-      speak(APP.multiplier.toFixed(2) + " times");
-    }
-
-  }, 100);
+function crash(){
+  g.run=0;cancelAnimationFrame(aid);md.classList.add("crash");st.textContent=`Crashed @ ${g.crash.toFixed(2)}×`;cb.disabled=1;bb.disabled=0;
+  if(g.bet&&!g.out){u.hist.unshift({r:g.rid,b:g.bet,c:"—",p:-g.bet});saveU()}
+  g.bet=0;if(speechSynthesis)speechSynthesis.speak(new SpeechSynthesisUtterance("Flew away"));
+  setTimeout(()=>{reset();setTimeout(start,1800)},2200);
 }
-
-/* ---------- GRAPH DRAWING ---------- */
-
-function drawGame(ctx, canvas, planeX, planeY) {
-
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  /* Background */
-
-  ctx.fillStyle = "#080808";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  /* Grid */
-
-  ctx.strokeStyle = "#252525";
-  ctx.lineWidth = 1;
-
-  for (let i = 0; i < canvas.width; i += 50) {
-    ctx.beginPath();
-    ctx.moveTo(i, 0);
-    ctx.lineTo(i, canvas.height);
-    ctx.stroke();
-  }
-
-  for (let i = 0; i < canvas.height; i += 50) {
-    ctx.beginPath();
-    ctx.moveTo(0, i);
-    ctx.lineTo(canvas.width, i);
-    ctx.stroke();
-  }
-
-  /* Rising graph */
-
-  ctx.strokeStyle = "#00ff88";
-  ctx.lineWidth = 4;
-
-  ctx.beginPath();
-  ctx.moveTo(20, canvas.height - 30);
-
-  for (let i = 20; i <= planeX; i += 5) {
-
-    const progress = i / canvas.width;
-
-    const graphY =
-      canvas.height -
-      30 -
-      progress * progress * (canvas.height - 70);
-
-    ctx.lineTo(i, graphY);
-  }
-
-  ctx.stroke();
-
-  /* Plane */
-
-  ctx.font = "32px Arial";
-  ctx.fillText("✈️", planeX, planeY);
-
-  /* Multiplier */
-
-  ctx.fillStyle = "white";
-  ctx.font = "bold 28px Arial";
-  ctx.fillText(
-    APP.multiplier.toFixed(2) + "x",
-    20,
-    40
-  );
+function reset(){px=40;py=cv?cv.height-70:300;pts=[];md.textContent="1.00×";md.classList.remove("crash");st.textContent="Next...";if(ctx)draw()}
+function draw(){
+  if(!ctx)return;const w=cv.width,h=cv.height;ctx.fillStyle="#0a0d10";ctx.fillRect(0,0,w,h);
+  ctx.strokeStyle="#1a2030";ctx.lineWidth=1;for(let i=0;i<w;i+=40){ctx.beginPath();ctx.moveTo(i,0);ctx.lineTo(i,h);ctx.stroke()}
+  if(pts.length>1){ctx.beginPath();ctx.strokeStyle="#e11d48";ctx.lineWidth=3;ctx.moveTo(pts[0].x,pts[0].y);pts.forEach(p=>ctx.lineTo(p.x,p.y));ctx.stroke();
+  ctx.lineTo(pts.at(-1).x,h);ctx.lineTo(pts[0].x,h);ctx.fillStyle="rgba(225,29,72,.12)";ctx.fill()}
+  if(g.run||pts.length){ctx.save();ctx.translate(px,py);ctx.rotate(-.35);ctx.fillStyle="#f1f5f9";ctx.beginPath();ctx.moveTo(18,0);ctx.lineTo(-12,-7);ctx.lineTo(-12,7);ctx.fill();ctx.fillStyle="#e11d48";ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(-6,-15);ctx.lineTo(4,0);ctx.fill();ctx.restore()}
 }
+function hist(){hb.innerHTML=u.hist.map(h=>`<tr><td>#\( {h.r}</td><td> \]{h.b}</td><td> \){h.c}</td><td class="\( {h.p>=0?"win":"loss"}"> \){h.p>=0?"+":""}${h.p.toFixed(2)}</td></tr>`).join("")||"<tr><td colspan=4>No games</td></tr>"}
 
-/* ---------- STOP DEMO ---------- */
-
-function stopGame() {
-
-  if (!APP.playing) return;
-
-  APP.playing = false;
-
-  clearInterval(APP.gameTimer);
-
-  const result = APP.multiplier.toFixed(2);
-
-  APP.history.unshift({
-    multiplier: result,
-    time: new Date().toLocaleString()
-  });
-
-  APP.history = APP.history.slice(0, 50);
-
-  save();
-
-  notify("Demo round finished at " + result + "x.");
-
-  speak("Demo round finished at " + result + " times.");
-
-  if ($("gameStatus")) {
-    $("gameStatus").textContent =
-      "Round finished: " + result + "x";
-  }
+/* seed demo */
+if(!users().find(x=>x.email==="demo@aviator.com")){
+  save([{email:"demo@aviator.com",pass:"demo1234",name:"Demo",bal:1000,ver:0,hist:[],noti:[{t:"Welcome! $1000 credited",d:new Date().toLocaleString()}],lim:{d:5000,l:2000},fa:0}]);
 }
-
-/* =========================================================
-   7. GAME HISTORY
-========================================================= */
-
-function renderHistory() {
-
-  const container = $("gameHistory");
-
-  if (!container) return;
-
-  container.innerHTML = "";
-
-  if (APP.history.length === 0) {
-    container.innerHTML =
-      "<p>No demo games played yet.</p>";
-    return;
-  }
-
-  APP.history.forEach(game => {
-
-    const item = document.createElement("div");
-
-    item.className = "history-item";
-
-    item.innerHTML = `
-      <strong>${game.multiplier}x</strong>
-      <small>${game.time}</small>
-    `;
-
-    container.appendChild(item);
-  });
-}
-
-/* =========================================================
-   8. NOTIFICATIONS
-========================================================= */
-
-function renderNotifications() {
-
-  const container = $("notifications");
-
-  if (!container) return;
-
-  container.innerHTML = "";
-
-  APP.notifications.forEach(n => {
-
-    const item = document.createElement("div");
-
-    item.className = "notification";
-
-    item.innerHTML = `
-      <strong>${n.message}</strong>
-      <small>${n.time}</small>
-    `;
-
-    container.appendChild(item);
-  });
-}
-
-/* =========================================================
-   9. SECURITY
-========================================================= */
-
-function securityInfo() {
-
-  alert(
-    "Security demo:\n\n" +
-    "• Password is required for login.\n" +
-    "• Session data is stored locally on this demo device.\n" +
-    "• No bank or mobile-money credentials are collected.\n" +
-    "• This demo does not process real payments."
-  );
-}
-
-/* =========================================================
-   10. RESPONSIBLE-USE CONTROLS
-========================================================= */
-
-function responsibleControls() {
-
-  const message =
-    "Responsible-use controls\n\n" +
-    "• Demo points have no monetary value.\n" +
-    "• Take breaks while using the demo.\n" +
-    "• Do not use real money.\n" +
-    "• No deposits or withdrawals are available.";
-
-  alert(message);
-}
-
-/* =========================================================
-   11. SUPPORT
-========================================================= */
-
-function support() {
-
-  alert(
-    "Beta Aviator Demo Support\n\n" +
-    "For this prototype, use the application's support section " +
-    "to report bugs or request technical assistance."
-  );
-}
-
-/* =========================================================
-   12. FINANCIAL FUNCTIONS NOTICE
-========================================================= */
-
-function financialNotice() {
-
-  alert(
-    "FINANCIAL FUNCTIONS NOTICE\n\n" +
-    "This version is a demonstration only.\n\n" +
-    "No real-money deposits, withdrawals, betting, " +
-    "mobile-money transfers, or banking functions are enabled.\n\n" +
-    "All displayed points are virtual demo points."
-  );
-}
-
-/* =========================================================
-   NAVIGATION
-========================================================= */
-
-function showSection(sectionName) {
-
-  document.querySelectorAll(".section").forEach(section => {
-    section.style.display = "none";
-  });
-
-  const section = document.getElementById(sectionName);
-
-  if (section) {
-    section.style.display = "block";
-  }
-
-  renderProfile();
-  renderWallet();
-  renderHistory();
-  renderNotifications();
-}
-
-/* =========================================================
-   LOGOUT
-========================================================= */
-
-function logout() {
-
-  APP.playing = false;
-
-  clearInterval(APP.gameTimer);
-
-  showSection("login");
-
-  speak("You have logged out.");
-}
-
-/* =========================================================
-   BUTTON CONNECTIONS
-========================================================= */
-
-document.addEventListener("DOMContentLoaded", () => {
-
-  /* Registration */
-
-  $("registerButton")?.addEventListener(
-    "click",
-    register
-  );
-
-  /* Login */
-
-  $("loginButton")?.addEventListener(
-    "click",
-    login
-  );
-
-  /* Verification */
-
-  $("verifyButton")?.addEventListener(
-    "click",
-    verifyDemoIdentity
-  );
-
-  /* Game */
-
-  $("startGameButton")?.addEventListener(
-    "click",
-    startGame
-  );
-
-  $("stopGameButton")?.addEventListener(
-    "click",
-    stopGame
-  );
-
-  /* Navigation */
-
-  $("profileButton")?.addEventListener(
-    "click",
-    () => showSection("profile")
-  );
-
-  $("walletButton")?.addEventListener(
-    "click",
-    () => showSection("wallet")
-  );
-
-  $("historyButton")?.addEventListener(
-    "click",
-    () => showSection("history")
-  );
-
-  $("notificationsButton")?.addEventListener(
-    "click",
-    () => showSection("notifications")
-  );
-
-  $("securityButton")?.addEventListener(
-    "click",
-    securityInfo
-  );
-
-  $("responsibleButton")?.addEventListener(
-    "click",
-    responsibleControls
-  );
-
-  $("supportButton")?.addEventListener(
-    "click",
-    support
-  );
-
-  $("financialNoticeButton")?.addEventListener(
-    "click",
-    financialNotice
-  );
-
-  $("logoutButton")?.addEventListener(
-    "click",
-    logout
-  );
-
-  /* Initial screen */
-
-  showSection(
-    APP.user ? "profile" : "login"
-  );
-
-  renderHistory();
-  renderNotifications();
-  renderWallet();
-});
+</script>
+</body>
+</html>
