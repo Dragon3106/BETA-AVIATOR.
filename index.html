@@ -2,888 +2,454 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BETA AVIATOR.COM V2</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>BETA AVIATOR V3</title>
 
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
-
-body{
- background:#070a10;
- color:#fff;
- min-height:100vh;
-}
-
+body{background:#070a11;color:white;min-height:100vh}
 header{
- background:#111722;
- padding:15px;
- display:flex;
- justify-content:space-between;
- align-items:center;
- border-bottom:1px solid #293347;
+  height:65px;background:#111827;display:flex;align-items:center;
+  justify-content:space-between;padding:0 16px;border-bottom:1px solid #263247
 }
-
-.logo{
- font-size:21px;
- font-weight:bold;
-}
-
+.logo{font-size:21px;font-weight:bold}
 .logo span{color:#ff3b30}
+.points{background:#1d293b;padding:9px 14px;border-radius:20px;color:#55e58a}
+.container{max-width:900px;margin:auto;padding:15px}
 
-.balance{
- background:#1c2636;
- padding:9px 13px;
- border-radius:20px;
- color:#50fa7b;
+.nav{
+ display:flex;gap:8px;margin-bottom:15px;overflow:auto
 }
-
-.page{
- max-width:900px;
- margin:auto;
- padding:15px;
-}
-
-.auth{
- max-width:420px;
- margin:50px auto;
- background:#111722;
- padding:25px;
- border-radius:15px;
-}
-
-.auth h1{
- text-align:center;
- margin-bottom:20px;
-}
-
-.input{
- width:100%;
- padding:14px;
- margin:7px 0;
- background:#080b12;
- color:white;
- border:1px solid #303b4f;
- border-radius:8px;
-}
-
-.btn{
- width:100%;
- padding:14px;
- margin-top:10px;
- border:0;
- border-radius:8px;
- font-size:16px;
- font-weight:bold;
- cursor:pointer;
-}
-
-.primary{background:#20c997;color:white}
-.danger{background:#ff3b30;color:white}
-
-.switch{
- text-align:center;
- margin-top:15px;
- color:#9ba7bb;
- cursor:pointer;
+.nav button{
+ background:#172033;color:white;border:0;padding:10px 15px;
+ border-radius:8px;white-space:nowrap
 }
 
 .game{
- background:#0d121c;
- border:1px solid #202b3d;
- border-radius:14px;
- overflow:hidden;
+ background:#0e1420;border:1px solid #273348;border-radius:14px;overflow:hidden
 }
-
 .screen{
- height:380px;
- position:relative;
- overflow:hidden;
+ height:390px;position:relative;overflow:hidden;
  background:
  linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),
  linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);
- background-size:40px 40px;
+ background-size:40px 40px
 }
-
-.multiplier{
- position:absolute;
- top:45%;
- left:50%;
- transform:translate(-50%,-50%);
- font-size:58px;
- font-weight:bold;
- color:#ff3b30;
+.score{
+ position:absolute;top:43%;left:50%;transform:translate(-50%,-50%);
+ font-size:65px;font-weight:bold;color:#ff3b30
 }
-
 .status{
- position:absolute;
- top:15px;
- left:15px;
- background:#171f2d;
- padding:8px 12px;
- border-radius:20px;
- font-size:13px;
+ position:absolute;top:15px;left:15px;background:#172033;
+ padding:8px 13px;border-radius:20px;font-size:13px
 }
-
 .plane{
- position:absolute;
- left:20px;
- bottom:25px;
- font-size:42px;
+ position:absolute;left:25px;bottom:25px;font-size:45px;
+ transition:all .12s linear
 }
-
-.controls{
- background:#111722;
- padding:18px;
+.controls{padding:18px;background:#111827}
+.controls button{
+ width:100%;padding:15px;border:0;border-radius:9px;
+ background:#20c997;color:white;font-size:17px;font-weight:bold
 }
+.controls button.stop{background:#ff3b30}
 
-.amount{
- width:100%;
- padding:14px;
- background:#080b12;
- color:white;
- border:1px solid #303b4f;
- border-radius:8px;
+.card{
+ background:#111827;border-radius:12px;padding:18px;margin-top:15px;
+ border:1px solid #273348
 }
-
-.buttons{
- display:flex;
- gap:10px;
- margin-top:10px;
+.row{
+ display:flex;justify-content:space-between;padding:11px 0;
+ border-bottom:1px solid #253044
 }
-
-.buttons button{
- flex:1;
- padding:14px;
- border:0;
- border-radius:8px;
- font-weight:bold;
- font-size:16px;
-}
-
-.bet{background:#20c997;color:white}
-.cash{background:#ff3b30;color:white}
-
-button:disabled{
- opacity:.4;
-}
-
-.profile{
- background:#111722;
- margin-top:15px;
- padding:18px;
- border-radius:12px;
-}
-
-.profile-row{
- display:flex;
- justify-content:space-between;
- padding:10px 0;
- border-bottom:1px solid #222c3d;
-}
-
-.history{
- background:#111722;
- margin-top:15px;
- padding:18px;
- border-radius:12px;
-}
-
-.history-item{
- display:flex;
- justify-content:space-between;
- padding:9px 0;
- border-bottom:1px solid #222c3d;
- font-size:14px;
-}
-
-.green{color:#50fa7b}
+.green{color:#55e58a}
 .red{color:#ff5252}
-
 .hidden{display:none}
 
-.notice{
- text-align:center;
- color:#78859a;
- font-size:12px;
- margin:15px;
+.history-item,.leader{
+ display:flex;justify-content:space-between;
+ padding:10px 0;border-bottom:1px solid #253044
 }
-
-@media(max-width:600px){
- .screen{height:330px}
- .multiplier{font-size:48px}
+.badge{
+ display:inline-block;background:#243149;padding:5px 9px;
+ border-radius:12px;font-size:12px
 }
+.notice{text-align:center;color:#77849a;font-size:12px;margin:18px}
 </style>
 </head>
 
 <body>
 
-<!-- HEADER -->
-
-<header id="mainHeader" class="hidden">
-
- <div class="logo">
-  ✈ BETA <span>AVIATOR</span>
- </div>
-
- <div class="balance">
-  KSh <span id="balance">5000.00</span>
- </div>
-
+<header>
+  <div class="logo">✈ BETA <span>AVIATOR</span></div>
+  <div class="points">
+    ⭐ <span id="points">5000</span>
+  </div>
 </header>
 
+<div class="container">
 
-<!-- LOGIN -->
-
-<div id="loginPage" class="page">
-
- <div class="auth">
-
-  <h1>✈ BETA AVIATOR</h1>
-
-  <input
-   id="loginPhone"
-   class="input"
-   placeholder="Phone number">
-
-  <input
-   id="loginPassword"
-   class="input"
-   type="password"
-   placeholder="Password">
-
-  <button
-   class="btn primary"
-   onclick="login()">
-   LOGIN
-  </button>
-
-  <div
-   class="switch"
-   onclick="showRegister()">
-   Don't have an account? Register
+  <div class="nav">
+    <button onclick="showSection('game')">🎮 Flight</button>
+    <button onclick="showSection('profile')">👤 Profile</button>
+    <button onclick="showSection('history')">📜 History</button>
+    <button onclick="showSection('leaderboard')">🏆 Leaderboard</button>
   </div>
 
- </div>
+  <!-- GAME -->
 
-</div>
+  <section id="game">
+
+    <div class="game">
+
+      <div class="screen">
+
+        <div class="status" id="status">
+          Ready for flight
+        </div>
+
+        <div class="score" id="score">
+          1.00x
+        </div>
+
+        <div class="plane" id="plane">
+          ✈️
+        </div>
+
+      </div>
+
+      <div class="controls">
+
+        <button id="flightButton" onclick="startFlight()">
+          START FLIGHT
+        </button>
+
+      </div>
+
+    </div>
+
+    <div class="card">
+      <div class="row">
+        <span>Virtual Points</span>
+        <span class="green" id="points2">5000</span>
+      </div>
+
+      <div class="row">
+        <span>Best Flight</span>
+        <span id="best">1.00x</span>
+      </div>
+
+      <div class="row">
+        <span>Total Flights</span>
+        <span id="total">0</span>
+      </div>
+    </div>
+
+  </section>
 
 
-<!-- REGISTER -->
+  <!-- PROFILE -->
 
-<div id="registerPage" class="page hidden">
+  <section id="profile" class="hidden">
 
- <div class="auth">
+    <div class="card">
 
-  <h1>Create Account</h1>
+      <h2>👤 Pilot Profile</h2>
 
-  <input
-   id="regUsername"
-   class="input"
-   placeholder="Username">
+      <br>
 
-  <input
-   id="regPhone"
-   class="input"
-   placeholder="Phone number">
+      <div class="row">
+        <span>Pilot</span>
+        <span>Dragon Pilot</span>
+      </div>
 
-  <input
-   id="regPassword"
-   class="input"
-   type="password"
-   placeholder="Password">
+      <div class="row">
+        <span>Status</span>
+        <span class="green">ACTIVE</span>
+      </div>
 
-  <button
-   class="btn primary"
-   onclick="register()">
-   CREATE ACCOUNT
-  </button>
+      <div class="row">
+        <span>Points</span>
+        <span id="profilePoints">5000</span>
+      </div>
 
-  <div
-   class="switch"
-   onclick="showLogin()">
-   Already have an account? Login
+      <div class="row">
+        <span>Best Flight</span>
+        <span id="profileBest">1.00x</span>
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- HISTORY -->
+
+  <section id="history" class="hidden">
+
+    <div class="card">
+
+      <h2>📜 Flight History</h2>
+
+      <br>
+
+      <div id="historyList">
+        No flights yet.
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- LEADERBOARD -->
+
+  <section id="leaderboard" class="hidden">
+
+    <div class="card">
+
+      <h2>🏆 Leaderboard</h2>
+
+      <br>
+
+      <div class="leader">
+        <span>🥇 SkyMaster</span>
+        <span class="green">18.72x</span>
+      </div>
+
+      <div class="leader">
+        <span>🥈 CaptainX</span>
+        <span class="green">14.36x</span>
+      </div>
+
+      <div class="leader">
+        <span>🥉 Pilot254</span>
+        <span class="green">11.85x</span>
+      </div>
+
+      <div class="leader">
+        <span>You</span>
+        <span id="myBest">1.00x</span>
+      </div>
+
+    </div>
+
+  </section>
+
+  <div class="notice">
+    BETA AVIATOR V3 — Virtual flight simulator. Points have no monetary value.
   </div>
-
- </div>
-
-</div>
-
-
-<!-- APP -->
-
-<div id="app" class="page hidden">
-
- <div class="game">
-
-  <div class="screen">
-
-   <div id="status" class="status">
-    Waiting for round...
-   </div>
-
-   <div id="multiplier" class="multiplier">
-    1.00x
-   </div>
-
-   <div id="plane" class="plane">
-    ✈️
-   </div>
-
-  </div>
-
-
-  <div class="controls">
-
-   <input
-    id="amount"
-    class="amount"
-    type="number"
-    min="10"
-    value="100"
-    placeholder="Demo bet amount">
-
-   <div class="buttons">
-
-    <button
-     id="betBtn"
-     class="bet"
-     onclick="placeBet()">
-     BET
-    </button>
-
-    <button
-     id="cashBtn"
-     class="cash"
-     onclick="cashOut()"
-     disabled>
-     CASH OUT
-    </button>
-
-   </div>
-
-  </div>
-
- </div>
-
-
- <!-- PROFILE -->
-
- <div class="profile">
-
-  <h3>My Account</h3>
-
-  <div class="profile-row">
-   <span>Username</span>
-   <span id="profileName"></span>
-  </div>
-
-  <div class="profile-row">
-   <span>Phone</span>
-   <span id="profilePhone"></span>
-  </div>
-
-  <div class="profile-row">
-   <span>Demo Balance</span>
-   <span class="green">
-    KSh <span id="profileBalance"></span>
-   </span>
-  </div>
-
-  <button
-   class="btn danger"
-   onclick="logout()">
-   LOGOUT
-  </button>
-
- </div>
-
-
- <!-- HISTORY -->
-
- <div class="history">
-
-  <h3>Game History</h3>
-
-  <div id="historyList">
-   No games yet.
-  </div>
-
- </div>
-
- <div class="notice">
-  DEMO VERSION — No real money, deposits or withdrawals.
- </div>
 
 </div>
 
 
 <script>
 
-let currentUser = null;
+let points = Number(localStorage.getItem("betaPoints")) || 5000;
+let best = Number(localStorage.getItem("betaBest")) || 1;
+let total = Number(localStorage.getItem("betaTotal")) || 0;
+let history = JSON.parse(localStorage.getItem("betaHistory") || "[]");
 
+let flying = false;
 let multiplier = 1;
-let crashPoint = 0;
-let playing = false;
-let betAmount = 0;
-let hasBet = false;
+let startTime;
+let timer;
 
 
-/* ---------- STORAGE ---------- */
+/* DISPLAY */
 
-function getUsers(){
- return JSON.parse(localStorage.getItem("betaUsers") || "{}");
-}
+function updateDisplay(){
 
-function saveUsers(users){
- localStorage.setItem("betaUsers",JSON.stringify(users));
-}
+ document.getElementById("points").textContent =
+ points.toLocaleString();
 
+ document.getElementById("points2").textContent =
+ points.toLocaleString();
 
-/* ---------- PAGES ---------- */
+ document.getElementById("profilePoints").textContent =
+ points.toLocaleString();
 
-function showRegister(){
+ document.getElementById("best").textContent =
+ best.toFixed(2)+"x";
 
- document.getElementById("loginPage")
- .classList.add("hidden");
+ document.getElementById("profileBest").textContent =
+ best.toFixed(2)+"x";
 
- document.getElementById("registerPage")
- .classList.remove("hidden");
+ document.getElementById("myBest").textContent =
+ best.toFixed(2)+"x";
 
-}
-
-function showLogin(){
-
- document.getElementById("registerPage")
- .classList.add("hidden");
-
- document.getElementById("loginPage")
- .classList.remove("hidden");
+ document.getElementById("total").textContent =
+ total;
 
 }
 
 
-/* ---------- REGISTER ---------- */
+/* SAVE */
 
-function register(){
+function saveData(){
 
- let username =
- document.getElementById("regUsername").value.trim();
-
- let phone =
- document.getElementById("regPhone").value.trim();
-
- let password =
- document.getElementById("regPassword").value;
-
- if(!username || !phone || !password){
-
-  alert("Please complete all fields.");
-  return;
-
- }
-
- let users = getUsers();
-
- if(users[phone]){
-
-  alert("An account with this phone already exists.");
-  return;
-
- }
-
- users[phone] = {
-
-  username:username,
-
-  phone:phone,
-
-  password:password,
-
-  balance:5000,
-
-  history:[]
-
- };
-
- saveUsers(users);
-
- alert(
-  "Account created successfully! You received KSh 5,000 demo balance."
- );
-
- showLogin();
-
-}
-
-
-/* ---------- LOGIN ---------- */
-
-function login(){
-
- let phone =
- document.getElementById("loginPhone").value.trim();
-
- let password =
- document.getElementById("loginPassword").value;
-
- let users = getUsers();
-
- let user = users[phone];
-
- if(!user || user.password !== password){
-
-  alert("Incorrect phone number or password.");
-  return;
-
- }
-
- currentUser = user;
-
+ localStorage.setItem("betaPoints",points);
+ localStorage.setItem("betaBest",best);
+ localStorage.setItem("betaTotal",total);
  localStorage.setItem(
-  "betaCurrentUser",
-  phone
+   "betaHistory",
+   JSON.stringify(history)
  );
 
- openApp();
-
 }
 
 
-/* ---------- OPEN APP ---------- */
+/* START */
 
-function openApp(){
+function startFlight(){
 
- document.getElementById("loginPage")
- .classList.add("hidden");
+ if(flying) return;
 
- document.getElementById("registerPage")
- .classList.add("hidden");
+ flying=true;
+ multiplier=1;
+ startTime=Date.now();
 
- document.getElementById("mainHeader")
- .classList.remove("hidden");
+ const button =
+ document.getElementById("flightButton");
 
- document.getElementById("app")
- .classList.remove("hidden");
+ button.textContent="LAND FLIGHT";
+ button.classList.add("stop");
 
- updateAccount();
-
- newRound();
-
-}
-
-
-/* ---------- ACCOUNT ---------- */
-
-function updateAccount(){
-
- document.getElementById("balance")
- .textContent =
- currentUser.balance.toFixed(2);
-
- document.getElementById("profileBalance")
- .textContent =
- currentUser.balance.toFixed(2);
-
- document.getElementById("profileName")
- .textContent =
- currentUser.username;
-
- document.getElementById("profilePhone")
- .textContent =
- currentUser.phone;
-
- renderHistory();
-
-}
-
-function saveCurrentUser(){
-
- let users = getUsers();
-
- users[currentUser.phone] =
- currentUser;
-
- saveUsers(users);
-
-}
-
-
-/* ---------- GAME ---------- */
-
-function newRound(){
-
- playing = false;
- multiplier = 1;
- hasBet = false;
-
- document.getElementById("multiplier")
- .textContent = "1.00x";
-
- document.getElementById("multiplier")
- .style.color = "#ff3b30";
+ button.onclick=landFlight;
 
  document.getElementById("status")
- .textContent =
- "Waiting for round...";
+ .textContent="✈ FLIGHT IN PROGRESS";
 
- document.getElementById("plane")
- .style.left = "20px";
+ document.getElementById("score")
+ .style.color="#ff3b30";
 
- document.getElementById("plane")
- .style.bottom = "25px";
-
- document.getElementById("betBtn")
- .disabled = false;
-
- document.getElementById("cashBtn")
- .disabled = true;
-
- setTimeout(startRound,3000);
+ runFlight();
 
 }
 
 
-function startRound(){
+/* FLIGHT ENGINE */
 
- playing = true;
+function runFlight(){
 
- crashPoint =
- parseFloat((Math.random()*5+1.2).toFixed(2));
+ if(!flying)return;
 
- document.getElementById("status")
- .textContent = "ROUND LIVE";
+ let elapsed =
+ (Date.now()-startTime)/1000;
 
- let start = Date.now();
+ multiplier =
+ 1 + elapsed*.28 + elapsed*elapsed*.025;
 
- function update(){
-
-  if(!playing)return;
-
-  let elapsed =
-  (Date.now()-start)/1000;
-
-  multiplier =
-  1 + elapsed*.25 + elapsed*elapsed*.035;
-
-  document.getElementById("multiplier")
-  .textContent =
-  multiplier.toFixed(2)+"x";
-
-  let progress =
-  Math.min((multiplier/crashPoint)*85,85);
-
-  document.getElementById("plane")
-  .style.left =
-  progress+"%";
-
-  document.getElementById("plane")
-  .style.bottom =
-  (25+progress*.45)+"%";
-
-  if(multiplier >= crashPoint){
-
-   multiplier = crashPoint;
-
-   document.getElementById("multiplier")
-   .textContent =
-   multiplier.toFixed(2)+"x";
-
-   crash();
-
-   return;
-
-  }
-
-  requestAnimationFrame(update);
-
- }
-
- requestAnimationFrame(update);
-
-}
-
-
-/* ---------- BET ---------- */
-
-function placeBet(){
-
- if(playing){
-
-  alert(
-   "The round is already running. Wait for the next round."
-  );
-
-  return;
-
- }
-
- let amount =
- parseFloat(
-  document.getElementById("amount").value
- );
-
- if(!amount || amount<10){
-
-  alert("Minimum demo bet is KSh 10.");
-  return;
-
- }
-
- if(amount>currentUser.balance){
-
-  alert("Insufficient demo balance.");
-  return;
-
- }
-
- currentUser.balance -= amount;
-
- saveCurrentUser();
- updateAccount();
-
- betAmount = amount;
- hasBet = true;
-
- document.getElementById("betBtn")
- .disabled = true;
-
- document.getElementById("cashBtn")
- .disabled = false;
-
- document.getElementById("status")
+ document.getElementById("score")
  .textContent =
- "Bet placed: KSh "+amount.toFixed(2);
-
- startRound();
-
-}
-
-
-/* ---------- CASH OUT ---------- */
-
-function cashOut(){
-
- if(!hasBet || !playing)return;
-
- let winnings =
- betAmount*multiplier;
-
- currentUser.balance += winnings;
-
- currentUser.history.unshift({
-
-  type:"CASH OUT",
-
-  amount:winnings,
-
-  multiplier:multiplier.toFixed(2),
-
-  time:new Date().toLocaleTimeString()
-
- });
-
- currentUser.history =
- currentUser.history.slice(0,20);
-
- saveCurrentUser();
- updateAccount();
-
- document.getElementById("status")
- .textContent =
- "Cashed out at "+
- multiplier.toFixed(2)+
- "x — KSh "+
- winnings.toFixed(2);
-
- hasBet = false;
-
- document.getElementById("cashBtn")
- .disabled = true;
-
-}
-
-
-/* ---------- CRASH ---------- */
-
-function crash(){
-
- playing = false;
-
- document.getElementById("multiplier")
- .style.color="#ff5252";
-
- document.getElementById("status")
- .textContent =
- "CRASHED at "+
  multiplier.toFixed(2)+"x";
 
- document.getElementById("cashBtn")
- .disabled=true;
+ let progress =
+ Math.min(multiplier*8,88);
 
- if(hasBet){
+ document.getElementById("plane")
+ .style.left =
+ progress+"%";
 
-  currentUser.history.unshift({
+ document.getElementById("plane")
+ .style.bottom =
+ (25+progress*.45)+"%";
 
-   type:"CRASH",
-
-   amount:-betAmount,
-
-   multiplier:multiplier.toFixed(2),
-
-   time:new Date().toLocaleTimeString()
-
-  });
-
-  currentUser.history =
-  currentUser.history.slice(0,20);
-
-  saveCurrentUser();
-  updateAccount();
-
-  hasBet=false;
-
- }
-
- setTimeout(newRound,3000);
+ timer=requestAnimationFrame(runFlight);
 
 }
 
 
-/* ---------- HISTORY ---------- */
+/* LAND */
+
+function landFlight(){
+
+ if(!flying)return;
+
+ flying=false;
+
+ cancelAnimationFrame(timer);
+
+ let finalMultiplier =
+ multiplier;
+
+ total++;
+
+ /*
+   Virtual points are awarded according
+   to the flight score.
+ */
+ let earned =
+ Math.floor(finalMultiplier*25);
+
+ points += earned;
+
+ if(finalMultiplier>best){
+   best=finalMultiplier;
+ }
+
+ history.unshift({
+   multiplier:finalMultiplier,
+   points:earned,
+   time:new Date().toLocaleTimeString()
+ });
+
+ history=history.slice(0,20);
+
+ saveData();
+ updateDisplay();
+ renderHistory();
+
+ document.getElementById("score")
+ .textContent =
+ finalMultiplier.toFixed(2)+"x";
+
+ document.getElementById("score")
+ .style.color="#55e58a";
+
+ document.getElementById("status")
+ .textContent =
+ "LANDED • +" + earned + " points";
+
+ const button =
+ document.getElementById("flightButton");
+
+ button.textContent="START FLIGHT";
+ button.classList.remove("stop");
+ button.onclick=startFlight;
+
+}
+
+
+/* HISTORY */
 
 function renderHistory(){
 
  let box =
  document.getElementById("historyList");
 
- if(!currentUser.history ||
-    currentUser.history.length===0){
+ if(history.length===0){
 
-  box.innerHTML =
-  "No games yet.";
-
+  box.innerHTML="No flights yet.";
   return;
 
  }
 
- box.innerHTML =
- currentUser.history.map(item=>`
+ box.innerHTML=history.map((item,index)=>`
 
   <div class="history-item">
 
-   <span>${item.type}</span>
+    <span>
+      Flight ${history.length-index}
+    </span>
 
-   <span>
-    ${item.multiplier}x
-   </span>
+    <span>
+      ${item.multiplier.toFixed(2)}x
+    </span>
 
-   <span class="${
-    item.amount>=0 ? "green":"red"
-   }">
-
-    KSh ${Math.abs(item.amount).toFixed(2)}
-
-   </span>
+    <span class="green">
+      +${item.points}
+    </span>
 
   </div>
 
@@ -892,45 +458,26 @@ function renderHistory(){
 }
 
 
-/* ---------- LOGOUT ---------- */
+/* NAVIGATION */
 
-function logout(){
+function showSection(section){
 
- currentUser = null;
+ ["game","profile","history","leaderboard"]
+ .forEach(id=>{
+   document.getElementById(id)
+   .classList.add("hidden");
+ });
 
- localStorage.removeItem("betaCurrentUser");
-
- document.getElementById("app")
- .classList.add("hidden");
-
- document.getElementById("mainHeader")
- .classList.add("hidden");
-
- document.getElementById("loginPage")
+ document.getElementById(section)
  .classList.remove("hidden");
 
 }
 
 
-/* ---------- AUTO LOGIN ---------- */
+/* INITIALIZE */
 
-let savedPhone =
-localStorage.getItem("betaCurrentUser");
-
-if(savedPhone){
-
- let users = getUsers();
-
- if(users[savedPhone]){
-
-  currentUser =
-  users[savedPhone];
-
-  openApp();
-
- }
-
-}
+updateDisplay();
+renderHistory();
 
 </script>
 
