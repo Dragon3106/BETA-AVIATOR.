@@ -1,127 +1,35 @@
-// BETIKA AVIATOR - CORE JS LOGIC
-// 1. Provably Fair Crash Generation (server should generate, front simulates)
-function generateCrashPoint(){
-  // Betika uses: crash = 0.99 / (1 - r) where r = random 0-1
-  // 50% crash <2x, 15% crash >10x, 1% crash >100x
-  let r = Math.random();
-  if(r < 0.02) return 1.00 + Math.random()*0.32; // instant crash 2%
-  let crash = 0.99 / (1 - r);
-  return Math.max(1.00, Math.min(crash, 1000)); // cap 1000x
-}
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Beta Aviator</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0f;color:#fff;font-family:system-ui;display:flex;justify-content:center;align-items:center;min-height:100vh}
+.card{width:95%;max-width:380px;background:#161822;border:1px solid #2a2d40;border-radius:20px;padding:20px}
+.inp{width:100%;padding:14px;margin:8px 0;background:#0e0f17;border:1px solid #2a2d40;border-radius:12px;color:#fff;outline:none}
+.btn{width:100%;padding:14px;background:#ff0a54;border:none;border-radius:12px;color:#fff;font-weight:900;margin:8px 0;cursor:pointer}
+.btnG{width:100%;padding:14px;background:#00e676;border:none;border-radius:12px;color:#000;font-weight:900;margin:8px 0;cursor:pointer}
+#game{display:none;position:fixed;inset:0;background:#07070b;flex-direction:column}
+.top{height:54px;background:#11121a;display:flex;align-items:center;padding:0 12px;gap:8px}
+#box{height:45vh;background:radial-gradient(at bottom,#1a0f2e,#07070b);position:relative;overflow:hidden}
+#plane{position:absolute;left:5%;bottom:20%;font-size:44px}
+#mult{position:absolute;left:50%;top:45%;transform:translate(-50%,-50%);font-size:58px;font-weight:900;text-shadow:0 0 20px #ff0a54}
+#status{position:absolute;left:50%;top:70%;transform:translate(-50%,-50%);background:rgba(0,0,0,.8);padding:8px 16px;border-radius:20px;font-size:13px;text-align:center}
+</style>
+</head>
+<body>
 
-// 2. Game State - 6. Game area with airplane + graph + voice
-let state = {
-  phase: 'waiting', // waiting, flying, crashed
-  multiplier: 1.00,
-  crashPoint: 2.00,
-  startTime: 0,
-  bets: {} // {bet1: {amount, active}, bet2: {...}}
-};
+<!-- LOGIN PAGE -->
+<div id="auth" class="card">
+<div style="text-align:center"><div style="font-size:40px">✈</div><h2>Beta Aviator</h2><p style="color:#666;font-size:11px">0716580098 ADMIN</p></div>
+<input id="phone" class="inp" placeholder="Phone 0716580098" value="0716580098">
+<input id="pass" type="password" class="inp" placeholder="Password any 4+">
+<button class="btn" onclick="login()">LOGIN & PLAY →</button>
+<p style="font-size:10px;color:#555;text-align:center;margin-top:8px">First time? Just enter phone + password → auto creates Demo 5000</p>
+</div>
 
-// 3. Plane + Graph + Voice Animation (like Betika)
-const plane = document.getElementById('plane');
-const multEl = document.getElementById('mult');
-const trail = document.getElementById('trail'); // SVG <path>
-const fill = document.getElementById('fill'); // SVG fill
-const status = document.getElementById('status');
-
-function speakBetika(text){
-  // Betika voice: "Bet accepted", "Cash out", "Flew away"
-  if(!voiceOn) return;
-  speechSynthesis.speak(new SpeechSynthesisUtterance(text));
-}
-
-function betikaLoop(timestamp){
-  if(state.phase === 'waiting'){
-    state.multiplier = 1.00;
-    multEl.textContent = '1.00x';
-    plane.style.left = '4%'; plane.style.bottom = '20%'; plane.style.opacity='1';
-    trail.setAttribute('d','M0,85 L0,85');
-    status.style.display='block';
-    status.innerHTML='WAITING FOR NEXT ROUND<br>Place BET';
-
-    setTimeout(()=>{
-      state.crashPoint = generateCrashPoint();
-      state.phase = 'flying';
-      state.startTime = performance.now();
-      status.style.display='none';
-      speakBetika('Round started');
-    }, 3000); // Betika 3 sec between rounds
-
-  } else if(state.phase === 'flying'){
-    let elapsed = (performance.now() - state.startTime) / 1000;
-    // Betika curve: multiplier = 1.07 ^ elapsed (exponential)
-    state.multiplier = Math.pow(1.0718, elapsed * 1.15);
-
-    multEl.textContent = state.multiplier.toFixed(2)+'x';
-    if(state.multiplier > 2) multEl.style.color='#ffcc00';
-    if(state.multiplier > 5) multEl.style.color='#ff2b6a';
-
-    // Plane moves left->right with graph
-    let progress = Math.min(elapsed / 15, 1); // 15 sec max flight
-    let left = 4 + progress*76;
-    let bottom = 20 + Math.pow(progress,1.5)*60;
-    plane.style.left = left+'%';
-    plane.style.bottom = bottom+'%';
-    plane.style.transform = `rotate(${8+progress*25}deg)`;
-
-    // Graph trail like Betika
-    let path = `M0,85 Q${progress*45},${85-Math.pow(progress,1.2)*40} ${left},${100-bottom}`;
-    trail.setAttribute('d', path);
-    fill.setAttribute('d', path + ` L${left},100 L0,100 Z`);
-
-    // Update cash out buttons
-    Object.keys(state.bets).forEach(id=>{
-      if(state.bets[id].active){
-        let btn = document.getElementById('b'+id);
-        btn.textContent = `CASH OUT KES ${(state.bets[id].amount * state.multiplier).toFixed(0)}`;
-      }
-    });
-
-    // Crash check
-    if(state.multiplier >= state.crashPoint){
-      state.phase='crashed';
-      multEl.textContent = state.crashPoint.toFixed(2)+'x';
-      multEl.style.color='#ff0a54';
-      status.style.display='block';
-      status.innerHTML=`<div style="color:#ff2b6a;font-weight:900">FLEW AWAY!</div>${state.crashPoint.toFixed(2)}x`;
-      plane.style.opacity='0';
-      speakBetika(`Flew away at ${state.crashPoint.toFixed(2)}`);
-
-      // Lose un-cashed bets
-      Object.keys(state.bets).forEach(id=>{
-        if(state.bets[id].active){
-          state.bets[id].active=false;
-          addToHistory(state.bets[id].amount, 0, state.crashPoint, false);
-        }
-      });
-
-      // Add to top history bar (like Betika: 4.21x, 1.32x...)
-      addCrashToBar(state.crashPoint);
-
-      setTimeout(()=>{ state.phase='waiting'; }, 2500);
-    }
-  }
-  requestAnimationFrame(betikaLoop);
-}
-
-// 4. BET + CASH OUT - like Betika
-function placeBet(id, amount){
-  if(state.bets[id]?.active){
-    // Cash out
-    let win = state.bets[id].amount * state.multiplier;
-    if(mode==='real') realBalance+=win; else demoBalance+=win;
-    state.bets[id].active=false;
-    speakBetika(`Cash out ${win.toFixed(0)}`);
-    toast(`CASH OUT KES ${win.toFixed(0)} @${state.multiplier.toFixed(2)}x`);
-    addToHistory(state.bets[id].amount, win, state.multiplier, true);
-    return;
-  }
-  if(mode==='real' && amount > realBalance){ toast('Low REAL - Deposit to 0716580098'); return; }
-  if(mode==='real') realBalance-=amount; else demoBalance-=amount;
-  state.bets[id]={amount, active:true};
-  toast(`BET KES ${amount} placed`);
-}
-
-// Start
-requestAnimationFrame(betikaLoop);
+<!-- GAME PAGE -->
+<div id="game">
+<div class="top"><b>Beta</b><b style="color:#ff0a54"> Aviator</b><div style="margin-left:auto;background:#1e202f;padding:6px 12px;border-radius:20px;color:#ffcc00;font-weight
