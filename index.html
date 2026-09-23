@@ -1,1042 +1,376 @@
-/* =========================================================
-   BETA AVIATOR — COMPLETE VIRTUAL SIMULATOR JAVASCRIPT
-   Virtual points only — no real-money transactions
-========================================================= */
-
-let user = null;
-let selectedPoints = 100;
-let multiplier = 1;
-let running = false;
-let flightTimer = null;
-let sessionFlights = 0;
-let graphPoints = [];
-
-
-/* =========================================================
-   STORAGE
-========================================================= */
-
-function loadUser() {
-    try {
-        const saved = localStorage.getItem("betaAviatorUser");
-        user = saved ? JSON.parse(saved) : null;
-    } catch (error) {
-        user = null;
-        console.error(error);
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aviator – 12 Instructions</title>
+  <style>
+    :root {
+      --bg: #0b0e11;
+      --card: #161a1f;
+      --accent: #e11d48;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --border: #1e293b;
     }
-}
-
-function saveUser() {
-    localStorage.setItem(
-        "betaAviatorUser",
-        JSON.stringify(user)
-    );
-    updateUI();
-}
-
-
-/* =========================================================
-   REGISTRATION — 1
-========================================================= */
-
-function createAccount() {
-
-    const name = document.getElementById("regName").value.trim();
-    const contact = document.getElementById("regContact").value.trim();
-    const password = document.getElementById("regPassword").value;
-
-    const message = document.getElementById("regMsg");
-
-    if (!name || !contact || !password) {
-        message.style.color = "#ff4d6d";
-        message.textContent = "Please fill in all fields.";
-        return;
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
     }
-
-    if (password.length < 4) {
-        message.style.color = "#ff4d6d";
-        message.textContent = "Password must contain at least 4 characters.";
-        return;
+    header {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 1.2rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 50;
     }
-
-    user = {
-        name: name,
-        contact: contact,
-        password: password,
-
-        balance: 5000,
-
-        xp: 0,
-        level: 1,
-
-        limit: "10",
-
-        history: [],
-
-        notifications: [
-            "Welcome to BETA AVIATOR!",
-            "Your virtual demo account has been created."
-        ]
-    };
-
-    saveUser();
-
-    message.style.color = "#35d51d";
-    message.textContent = "Account created successfully.";
-
-    setTimeout(function () {
-
-        document.getElementById("registerPage")
-            .classList.add("hidden");
-
-        document.getElementById("loginPage")
-            .classList.remove("hidden");
-
-        document.getElementById("loginContact").value = contact;
-        document.getElementById("loginPassword").value = "";
-
-        document.getElementById("loginMsg").textContent =
-            "Account created. Login to continue.";
-
-    }, 700);
-}
-
-
-/* =========================================================
-   LOGIN — 2
-========================================================= */
-
-function loginAccount() {
-
-    const contact =
-        document.getElementById("loginContact").value.trim();
-
-    const password =
-        document.getElementById("loginPassword").value;
-
-    const message =
-        document.getElementById("loginMsg");
-
-    const saved =
-        JSON.parse(
-            localStorage.getItem("betaAviatorUser")
-        );
-
-    if (!saved) {
-        message.style.color = "#ff4d6d";
-        message.textContent =
-            "No account found. Please register first.";
-        return;
+    header h1 { font-size: 1.25rem; font-weight: 700; }
+    header h1 span { color: var(--accent); }
+    .layout {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      max-width: 1200px;
+      margin: 0 auto;
+      min-height: calc(100vh - 70px);
     }
-
-    if (
-        saved.contact === contact &&
-        saved.password === password
-    ) {
-
-        user = saved;
-
-        message.style.color = "#35d51d";
-        message.textContent = "Login successful.";
-
-        setTimeout(function () {
-
-            document.getElementById("registerPage")
-                .classList.add("hidden");
-
-            document.getElementById("loginPage")
-                .classList.add("hidden");
-
-            document.getElementById("app")
-                .classList.remove("hidden");
-
-            updateUI();
-            openPage("home");
-
-        }, 500);
-
-    } else {
-
-        message.style.color = "#ff4d6d";
-        message.textContent =
-            "Incorrect phone/email or password.";
+    nav {
+      background: var(--card);
+      border-right: 1px solid var(--border);
+      padding: 1.5rem 0;
+      overflow-y: auto;
     }
-}
-
-
-/* =========================================================
-   PAGE SWITCHING
-========================================================= */
-
-function openPage(pageName) {
-
-    document.querySelectorAll(".appPage")
-        .forEach(function(page) {
-            page.classList.add("hidden");
-        });
-
-    const page =
-        document.getElementById(pageName);
-
-    if (page) {
-        page.classList.remove("hidden");
+    nav button {
+      display: block;
+      width: 100%;
+      text-align: left;
+      background: none;
+      border: none;
+      color: var(--muted);
+      padding: 0.75rem 1.5rem;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.15s;
     }
-
-    if (pageName === "game") {
-        updateGame();
-        setTimeout(drawCurrentGraph, 100);
+    nav button:hover,
+    nav button.active {
+      background: #1e293b;
+      color: white;
+      border-left: 3px solid var(--accent);
     }
-
-    updateUI();
-}
-
-
-/* =========================================================
-   PROFILE — 3
-========================================================= */
-
-function saveProfile() {
-
-    if (!user) return;
-
-    const name =
-        document.getElementById("profileName").value.trim();
-
-    const contact =
-        document.getElementById("profileContact").value.trim();
-
-    if (!name || !contact) {
-        alert("Please complete the profile.");
-        return;
+    nav button span {
+      display: inline-block;
+      width: 24px;
+      color: var(--accent);
+      font-weight: 600;
     }
-
-    user.name = name;
-    user.contact = contact;
-
-    user.notifications.unshift(
-        "Your profile was updated."
-    );
-
-    saveUser();
-
-    alert("Profile saved successfully.");
-}
-
-
-/* =========================================================
-   VERIFICATION — 4
-========================================================= */
-
-function verificationInfo() {
-
-    alert(
-        "This is a virtual simulator. " +
-        "Identity documents are not collected."
-    );
-}
-
-
-/* =========================================================
-   VIRTUAL WALLET — 5
-========================================================= */
-
-function addPoints() {
-
-    if (!user) return;
-
-    user.balance += 1000;
-
-    user.notifications.unshift(
-        "1,000 virtual points added."
-    );
-
-    saveUser();
-
-    alert("1,000 virtual points added.");
-}
-
-
-/* =========================================================
-   GAME POINT CONTROL — 6
-========================================================= */
-
-function changePoints(amount) {
-
-    selectedPoints += amount;
-
-    if (selectedPoints < 100) {
-        selectedPoints = 100;
+    main {
+      padding: 2rem 2.5rem;
+      overflow-y: auto;
     }
-
-    if (selectedPoints > 5000) {
-        selectedPoints = 5000;
+    .section { display: none; animation: fade 0.25s ease; }
+    .section.active { display: block; }
+    @keyframes fade {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
-
-    updatePointDisplay();
-}
-
-
-function setPoints(amount) {
-
-    selectedPoints = amount;
-
-    updatePointDisplay();
-}
-
-
-function updatePointDisplay() {
-
-    const selected =
-        document.getElementById("selectedPoints");
-
-    const startAmount =
-        document.getElementById("startAmount");
-
-    if (selected) {
-        selected.textContent =
-            selectedPoints.toLocaleString();
+    h2 {
+      font-size: 1.6rem;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
     }
-
-    if (startAmount) {
-        startAmount.textContent =
-            selectedPoints.toLocaleString() + " PTS";
+    h2 .num {
+      background: var(--accent);
+      color: white;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+      font-weight: 700;
     }
-}
-
-
-/* =========================================================
-   START VIRTUAL FLIGHT
-========================================================= */
-
-function startFlight() {
-
-    if (!user || running) return;
-
-    if (
-        user.limit !== "unlimited" &&
-        sessionFlights >= Number(user.limit)
-    ) {
-
-        setFlightStatus(
-            "SESSION FLIGHT LIMIT REACHED"
-        );
-
-        speak(
-            "Your session flight limit has been reached."
-        );
-
-        return;
+    p, li { color: var(--muted); margin-bottom: 0.8rem; }
+    ul { padding-left: 1.4rem; margin-bottom: 1.2rem; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.4rem;
+      margin-top: 1.2rem;
     }
-
-    if (user.balance < selectedPoints) {
-
-        setFlightStatus(
-            "NOT ENOUGH VIRTUAL POINTS"
-        );
-
-        speak("Not enough virtual points.");
-
-        return;
+    .tip {
+      border-left: 4px solid var(--accent);
+      padding-left: 1rem;
+      margin: 1.2rem 0;
+      color: #fca5a5;
     }
-
-    user.balance -= selectedPoints;
-
-    sessionFlights++;
-
-    multiplier = 1;
-
-    graphPoints = [];
-
-    running = true;
-
-    saveUser();
-
-    const startButton =
-        document.getElementById("startButton");
-
-    const landButton =
-        document.getElementById("landButton");
-
-    if (startButton) {
-        startButton.classList.add("hidden");
+    footer {
+      text-align: center;
+      padding: 1.5rem;
+      color: var(--muted);
+      font-size: 0.85rem;
+      border-top: 1px solid var(--border);
     }
-
-    if (landButton) {
-        landButton.classList.remove("hidden");
+    @media (max-width: 768px) {
+      .layout { grid-template-columns: 1fr; }
+      nav {
+        display: flex;
+        overflow-x: auto;
+        padding: 0.5rem;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+      }
+      nav button {
+        white-space: nowrap;
+        padding: 0.6rem 1rem;
+        border-left: none !important;
+        border-bottom: 3px solid transparent;
+      }
+      nav button.active { border-bottom-color: var(--accent); }
     }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Aviator <span>Instructions</span></h1>
+    <div style="font-size:0.9rem;color:var(--muted)">12 Sections</div>
+  </header>
 
-    setFlightStatus("FLIGHT IN PROGRESS");
+  <div class="layout">
+    <nav id="nav"></nav>
+    <main id="content"></main>
+  </div>
 
-    speak("Flight started.");
+  <footer>
+    Play responsibly • 18+ only • This is an informational demo
+  </footer>
 
-    beginFlightAnimation();
-}
+  <script>
+    // ========== DATA FOR ALL 12 SECTIONS ==========
+    const sections = [
+      {
+        id: 1,
+        title: "Registration",
+        content: `
+          <p>Create your account in a few simple steps:</p>
+          <ul>
+            <li>Enter a valid email address and choose a strong password.</li>
+            <li>Confirm your email via the link we send you.</li>
+            <li>Accept the Terms of Service and Privacy Policy.</li>
+            <li>Optionally enable 2-Factor Authentication during signup.</li>
+          </ul>
+          <div class="tip">Never share your password or verification codes with anyone.</div>
+        `
+      },
+      {
+        id: 2,
+        title: "Login",
+        content: `
+          <p>Access your account securely:</p>
+          <ul>
+            <li>Use your registered email + password.</li>
+            <li>If 2FA is enabled, enter the code from your authenticator app.</li>
+            <li>Use “Forgot password” to reset via email if needed.</li>
+            <li>Sessions expire after a period of inactivity for security.</li>
+          </ul>
+        `
+      },
+      {
+        id: 3,
+        title: "Profile",
+        content: `
+          <p>Manage your personal information:</p>
+          <ul>
+            <li>Update display name, avatar and contact details.</li>
+            <li>View account creation date and last login.</li>
+            <li>Change password and manage linked devices.</li>
+            <li>Set preferred language and notification preferences.</li>
+          </ul>
+        `
+      },
+      {
+        id: 4,
+        title: "Identity verification",
+        content: `
+          <p>Complete KYC to unlock higher limits and withdrawals:</p>
+          <ul>
+            <li>Upload a government-issued ID (passport, national ID or driver’s license).</li>
+            <li>Take a live selfie for face matching.</li>
+            <li>Provide proof of address if requested.</li>
+            <li>Verification usually takes a few minutes to 24 hours.</li>
+          </ul>
+          <div class="tip">All documents are encrypted and processed securely.</div>
+        `
+      },
+      {
+        id: 5,
+        title: "Virtual wallet",
+        content: `
+          <p>Your in-game balance and transaction center:</p>
+          <ul>
+            <li>View current balance and pending transactions.</li>
+            <li>Deposit via supported payment methods.</li>
+            <li>Withdraw to your verified bank or crypto wallet.</li>
+            <li>See full transaction history with filters.</li>
+          </ul>
+        `
+      },
+      {
+        id: 6,
+        title: "Game area with airplane + graph + voice",
+        content: `
+          <p>The main play screen contains three key elements:</p>
+          <ul>
+            <li><strong>Airplane</strong> – flies upward while the multiplier increases.</li>
+            <li><strong>Live graph</strong> – shows the current multiplier in real time.</li>
+            <li><strong>Voice / sound</strong> – announces key moments and can be muted.</li>
+          </ul>
+          <div class="card">
+            <p><strong>How to play:</strong></p>
+            <ol>
+              <li>Place your bet before the round starts.</li>
+              <li>Watch the airplane take off and the multiplier rise.</li>
+              <li>Cash out before the airplane flies away to lock in your win.</li>
+              <li>If the plane disappears before you cash out, the bet is lost.</li>
+            </ol>
+          </div>
+        `
+      },
+      {
+        id: 7,
+        title: "Game history",
+        content: `
+          <p>Review past rounds and your personal results:</p>
+          <ul>
+            <li>See the last 50–100 crash points.</li>
+            <li>Filter by date or by your own bets only.</li>
+            <li>View detailed bet information (amount, cash-out multiplier, profit/loss).</li>
+            <li>Export history if needed for personal records.</li>
+          </ul>
+        `
+      },
+      {
+        id: 8,
+        title: "Notifications",
+        content: `
+          <p>Stay informed about important events:</p>
+          <ul>
+            <li>Deposit / withdrawal confirmations.</li>
+            <li>Promotion and bonus alerts.</li>
+            <li>Security alerts (new login, password change).</li>
+            <li>You can turn categories on/off in Profile → Notifications.</li>
+          </ul>
+        `
+      },
+      {
+        id: 9,
+        title: "Security",
+        content: `
+          <p>Protect your account with these tools:</p>
+          <ul>
+            <li>Enable 2-Factor Authentication (recommended).</li>
+            <li>Review active sessions and log out remotely.</li>
+            <li>Set a withdrawal lock / cool-down period.</li>
+            <li>Change password regularly and never reuse it on other sites.</li>
+          </ul>
+          <div class="tip">We will never ask for your password or 2FA codes via email or chat.</div>
+        `
+      },
+      {
+        id: 10,
+        title: "Responsible-use controls",
+        content: `
+          <p>Tools to help you stay in control:</p>
+          <ul>
+            <li>Set daily / weekly deposit limits.</li>
+            <li>Set loss limits and session time limits.</li>
+            <li>Self-exclude for a chosen period (24 h – permanent).</li>
+            <li>Reality-check pop-ups that remind you how long you’ve been playing.</li>
+          </ul>
+          <div class="tip">If you feel you need help, contact support or visit a responsible-gambling organization.</div>
+        `
+      },
+      {
+        id: 11,
+        title: "Support",
+        content: `
+          <p>We’re here to help 24/7:</p>
+          <ul>
+            <li>Live chat (fastest response).</li>
+            <li>Email support with ticket tracking.</li>
+            <li>FAQ and knowledge base.</li>
+            <li>Phone support in selected regions.</li>
+          </ul>
+        `
+      },
+      {
+        id: 12,
+        title: "Financial functions notice",
+        content: `
+          <p>Important legal and financial information:</p>
+          <ul>
+            <li>All funds are held in segregated accounts where required by law.</li>
+            <li>Deposits and withdrawals are subject to verification and processing times.</li>
+            <li>Currency conversion fees may apply.</li>
+            <li>We are licensed and regulated. Please play only if it is legal in your jurisdiction.</li>
+            <li>Gambling involves risk. Never bet more than you can afford to lose.</li>
+          </ul>
+          <div class="card">
+            <p>By using this platform you confirm that you are of legal age and that online gambling is permitted in your location.</p>
+          </div>
+        `
+      }
+    ];
 
-
-/* =========================================================
-   FLIGHT ANIMATION + GRAPH + AIRPLANE
-========================================================= */
-
-function beginFlightAnimation() {
-
-    clearInterval(flightTimer);
-
-    const canvas =
-        document.getElementById("flightCanvas");
-
-    if (!canvas) return;
-
-    const ctx =
-        canvas.getContext("2d");
-
-    resizeCanvas();
-
-    let x = 30;
-
-    graphPoints = [];
-
-    flightTimer = setInterval(function() {
-
-        if (!running) return;
-
-        multiplier +=
-            0.01 + Math.random() * 0.055;
-
-        const multiplierElement =
-            document.getElementById("multiplier");
-
-        if (multiplierElement) {
-            multiplierElement.textContent =
-                multiplier.toFixed(2) + "x";
-        }
-
-        x += 7;
-
-        if (x > canvas.width + 50) {
-            x = 30;
-        }
-
-        const progress =
-            Math.min(multiplier / 8, 1);
-
-        const y =
-            canvas.height -
-            45 -
-            progress * (canvas.height - 100);
-
-        graphPoints.push({
-            x: x,
-            y: y
-        });
-
-        if (graphPoints.length > 120) {
-            graphPoints.shift();
-        }
-
-        drawCanvas(ctx, canvas);
-
-        setFlightStatus(
-            "FLIGHT • " +
-            multiplier.toFixed(2) +
-            "x"
-        );
-
-    }, 180);
-}
-
-
-/* =========================================================
-   DRAW GRAPH
-========================================================= */
-
-function drawCanvas(ctx, canvas) {
-
-    ctx.clearRect(
-        0,
-        0,
-        canvas.width,
-        canvas.height
-    );
-
-
-    /* Background rays */
-
-    ctx.strokeStyle =
-        "rgba(255,255,255,0.07)";
-
-    ctx.lineWidth = 1;
-
-    for (let i = 0; i < 12; i++) {
-
-        ctx.beginPath();
-
-        ctx.moveTo(
-            0,
-            canvas.height
-        );
-
-        ctx.lineTo(
-            canvas.width,
-            canvas.height - i * 35
-        );
-
-        ctx.stroke();
-    }
-
-
-    /* Graph */
-
-    if (graphPoints.length < 2) {
-        drawAirplane(
-            ctx,
-            50,
-            canvas.height - 55
-        );
-        return;
-    }
-
-    ctx.beginPath();
-
-    graphPoints.forEach(function(point, index) {
-
-        if (index === 0) {
-            ctx.moveTo(
-                point.x,
-                point.y
-            );
-        } else {
-            ctx.lineTo(
-                point.x,
-                point.y
-            );
-        }
+    // ========== RENDER NAVIGATION ==========
+    const nav = document.getElementById('nav');
+    sections.forEach(s => {
+      const btn = document.createElement('button');
+      btn.innerHTML = `<span>${s.id}</span> ${s.title}`;
+      btn.dataset.id = s.id;
+      btn.addEventListener('click', () => showSection(s.id));
+      nav.appendChild(btn);
     });
 
-    ctx.strokeStyle = "#e71955";
-    ctx.lineWidth = 5;
-
-    ctx.shadowBlur = 15;
-    ctx.shadowColor = "#e71955";
-
-    ctx.stroke();
-
-    ctx.shadowBlur = 0;
-
-
-    /* Airplane */
-
-    const last =
-        graphPoints[graphPoints.length - 1];
-
-    drawAirplane(
-        ctx,
-        last.x,
-        last.y
-    );
-}
-
-
-/* =========================================================
-   AIRPLANE
-========================================================= */
-
-function drawAirplane(ctx, x, y) {
-
-    ctx.save();
-
-    ctx.translate(x, y);
-
-    ctx.rotate(-0.25);
-
-    ctx.font = "42px Arial";
-
-    ctx.fillStyle = "#ffffff";
-
-    ctx.shadowBlur = 12;
-    ctx.shadowColor = "#e71955";
-
-    ctx.fillText("✈", -18, 15);
-
-    ctx.restore();
-
-    ctx.shadowBlur = 0;
-}
-
-
-/* =========================================================
-   CANVAS SIZE
-========================================================= */
-
-function resizeCanvas() {
-
-    const canvas =
-        document.getElementById("flightCanvas");
-
-    if (!canvas) return;
-
-    canvas.width =
-        canvas.clientWidth;
-
-    canvas.height =
-        canvas.clientHeight;
-
-    drawCurrentGraph();
-}
-
-
-function drawCurrentGraph() {
-
-    const canvas =
-        document.getElementById("flightCanvas");
-
-    if (!canvas) return;
-
-    const ctx =
-        canvas.getContext("2d");
-
-    drawCanvas(ctx, canvas);
-}
-
-
-/* =========================================================
-   LAND VIRTUAL FLIGHT
-========================================================= */
-
-function landFlight() {
-
-    if (!running || !user) return;
-
-    running = false;
-
-    clearInterval(flightTimer);
-
-    const earned =
-        Math.floor(
-            selectedPoints * multiplier
-        );
-
-    user.balance += earned;
-
-    user.xp +=
-        Math.floor(multiplier * 10);
-
-
-    /* Level system */
-
-    if (user.xp >= 1000) {
-
-        user.level += 1;
-
-        user.xp = 0;
-
-        user.notifications.unshift(
-            "Congratulations! You reached Level " +
-            user.level + "."
-        );
-    }
-
-
-    /* History */
-
-    user.history.unshift({
-
-        date:
-            new Date().toLocaleString(),
-
-        multiplier:
-            multiplier.toFixed(2) + "x",
-
-        points:
-            earned
+    // ========== RENDER CONTENT ==========
+    const content = document.getElementById('content');
+    sections.forEach(s => {
+      const div = document.createElement('div');
+      div.className = 'section';
+      div.id = `section-${s.id}`;
+      div.innerHTML = `
+        <h2><span class="num">${s.id}</span> ${s.title}</h2>
+        ${s.content}
+      `;
+      content.appendChild(div);
     });
 
+    // ========== SHOW SECTION ==========
+    function showSection(id) {
+      document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('nav button').forEach(btn => btn.classList.remove('active'));
 
-    user.notifications.unshift(
-        "Flight completed at " +
-        multiplier.toFixed(2) +
-        "x."
-    );
+      document.getElementById(`section-${id}`).classList.add('active');
+      document.querySelector(`nav button[data-id="${id}"]`).classList.add('active');
 
-
-    saveUser();
-
-
-    const startButton =
-        document.getElementById("startButton");
-
-    const landButton =
-        document.getElementById("landButton");
-
-    if (startButton) {
-        startButton.classList.remove("hidden");
+      // Update URL hash without scrolling
+      history.replaceState(null, null, `#${id}`);
     }
 
-    if (landButton) {
-        landButton.classList.add("hidden");
-    }
-
-
-    setFlightStatus(
-        "LANDED • +" +
-        earned +
-        " VIRTUAL POINTS"
-    );
-
-
-    speak(
-        "Flight landed at " +
-        multiplier.toFixed(2) +
-        " times."
-    );
-
-    updateGame();
-}
-
-
-/* =========================================================
-   FLIGHT STATUS
-========================================================= */
-
-function setFlightStatus(text) {
-
-    const element =
-        document.getElementById("flightStatus");
-
-    if (element) {
-        element.textContent = text;
-    }
-}
-
-
-/* =========================================================
-   VOICE
-========================================================= */
-
-function speak(text) {
-
-    if (
-        typeof window.speechSynthesis ===
-        "undefined"
-    ) {
-        return;
-    }
-
-    window.speechSynthesis.cancel();
-
-    const speech =
-        new SpeechSynthesisUtterance(text);
-
-    speech.rate = 0.9;
-    speech.pitch = 1;
-    speech.volume = 1;
-
-    window.speechSynthesis.speak(speech);
-}
-
-
-/* =========================================================
-   HISTORY — 7
-========================================================= */
-
-function updateHistory() {
-
-    const table =
-        document.getElementById("historyTable");
-
-    if (!table || !user) return;
-
-    table.innerHTML = "";
-
-    if (user.history.length === 0) {
-
-        table.innerHTML =
-            "<tr><td colspan='3'>No flights yet.</td></tr>";
-
-        return;
-    }
-
-    user.history.forEach(function(item) {
-
-        const row =
-            document.createElement("tr");
-
-        row.innerHTML =
-            "<td>" + item.date + "</td>" +
-            "<td>" + item.multiplier + "</td>" +
-            "<td>+" +
-            item.points +
-            " PTS</td>";
-
-        table.appendChild(row);
-    });
-}
-
-
-/* =========================================================
-   RECENT FLIGHTS
-========================================================= */
-
-function updateFlightList() {
-
-    const list =
-        document.getElementById("flightList");
-
-    if (!list || !user) return;
-
-    list.innerHTML = "";
-
-    if (user.history.length === 0) {
-
-        list.innerHTML =
-            "<p>No flights yet.</p>";
-
-        return;
-    }
-
-    user.history
-        .slice(0, 8)
-        .forEach(function(item) {
-
-            const row =
-                document.createElement("div");
-
-            row.className = "flight-row";
-
-            row.innerHTML =
-                "<span>✈ " +
-                item.date +
-                "</span>" +
-
-                "<span>" +
-                item.multiplier +
-                "</span>" +
-
-                "<span>+" +
-                item.points +
-                " PTS</span>";
-
-            list.appendChild(row);
-        });
-}
-
-
-/* =========================================================
-   NOTIFICATIONS — 8
-========================================================= */
-
-function updateNotifications() {
-
-    const list =
-        document.getElementById(
-            "notificationList"
-        );
-
-    if (!list || !user) return;
-
-    list.innerHTML = "";
-
-    user.notifications
-        .slice(0, 15)
-        .forEach(function(message) {
-
-            const item =
-                document.createElement("div");
-
-            item.className = "card";
-
-            item.textContent = message;
-
-            list.appendChild(item);
-        });
-}
-
-
-/* =========================================================
-   SECURITY — 9
-========================================================= */
-
-function changePassword() {
-
-    if (!user) return;
-
-    const newPassword =
-        document.getElementById(
-            "newPassword"
-        ).value;
-
-    if (newPassword.length < 4) {
-
-        alert(
-            "Password must contain at least 4 characters."
-        );
-
-        return;
-    }
-
-    user.password = newPassword;
-
-    user.notifications.unshift(
-        "Your password was changed."
-    );
-
-    saveUser();
-
-    document.getElementById(
-        "newPassword"
-    ).value = "";
-
-    alert("Password changed successfully.");
-}
-
-
-/* =========================================================
-   RESPONSIBLE USE — 10
-========================================================= */
-
-function saveLimit() {
-
-    if (!user) return;
-
-    const limit =
-        document.getElementById(
-            "flightLimit"
-        ).value;
-
-    user.limit = limit;
-
-    saveUser();
-
-    alert("Virtual flight limit saved.");
-}
-
-
-function pauseGame() {
-
-    running = false;
-
-    clearInterval(flightTimer);
-
-    setFlightStatus(
-        "SIMULATOR PAUSED"
-    );
-
-    const message =
-        document.getElementById("pauseMsg");
-
-    if (message) {
-        message.textContent =
-            "The simulator has been paused.";
-    }
-}
-
-
-/* =========================================================
-   SUPPORT — 11
-========================================================= */
-
-function sendSupport() {
-
-    if (!user) return;
-
-    const subject =
-        document.getElementById(
-            "supportSubject"
-        ).value.trim();
-
-    const message =
-        document.getElementById(
-            "supportText"
-        ).value.trim();
-
-    const result =
-        document.getElementById(
-            "supportMsg"
-        );
-
-    if (!subject || !message) {
-
-        result.textContent =
-            "Please complete both fields.";
-
-        return;
-    }
-
-    user.notifications.unshift(
-        "Support request submitted: " +
-        subject
-    );
-
-    saveUser();
-
-    result.style.color = "#35d51d";
-
-    result.textContent =
-        "Support request submitted successfully.";
-
-    document.getElementById(
-        "supportSubject"
-    ).value = "";
-
-    document.getElementById(
-        "supportText"
-    ).value = "";
-}
-
-
-/* =========================================================
-   FINANCIAL SECTION — 12
-========================================================= */
-
-function showFinancialInfo() {
-
-    alert(
-        "This is a virtual simulator. " +
-        "No real-money deposits, withdrawals, " +
-        "payments or cash prizes are enabled."
-    );
-}
-
-
-/* =========================================================
-   GAME UPDATE
-========================================================= */
-
-function updateGame() {
-
-    if (!user) return;
-
-    const balance =
-        user.balance.toLocaleString();
-
-    const gameBalance =
-        document.getElementById(
-            "gameBalance"
-        );
-
-    if (gameBalance) {
-        gameBalance.textContent = balance;
-    }
-
-    updatePointDisplay();
-    updateFlightList();
-}
-
-
-/* =========================================================
-   COMPLETE UI UPDATE
-========================================================= */
-
-function updateUI() {
-
-    if (!user) return;
-
-    const headerBalance =
-        document.getElementById(
-            "headerBalance"
-        );
-
-    if (headerBalance) {
-        headerBalance.textContent =
-            user.balance.toLocaleString() +
-            " PTS";
- 
+    // ========== INITIAL LOAD ==========
+    const hash = parseInt(location.hash.slice(1));
+    showSection(hash >= 1 && hash <= 12 ? hash : 1);
+  </script>
+</body>
+</html>
