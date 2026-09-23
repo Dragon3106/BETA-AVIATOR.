@@ -1,35 +1,485 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Beta Aviator</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>BETA AVIATOR V3</title>
+
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{background:#0a0a0f;color:#fff;font-family:system-ui;display:flex;justify-content:center;align-items:center;min-height:100vh}
-.card{width:95%;max-width:380px;background:#161822;border:1px solid #2a2d40;border-radius:20px;padding:20px}
-.inp{width:100%;padding:14px;margin:8px 0;background:#0e0f17;border:1px solid #2a2d40;border-radius:12px;color:#fff;outline:none}
-.btn{width:100%;padding:14px;background:#ff0a54;border:none;border-radius:12px;color:#fff;font-weight:900;margin:8px 0;cursor:pointer}
-.btnG{width:100%;padding:14px;background:#00e676;border:none;border-radius:12px;color:#000;font-weight:900;margin:8px 0;cursor:pointer}
-#game{display:none;position:fixed;inset:0;background:#07070b;flex-direction:column}
-.top{height:54px;background:#11121a;display:flex;align-items:center;padding:0 12px;gap:8px}
-#box{height:45vh;background:radial-gradient(at bottom,#1a0f2e,#07070b);position:relative;overflow:hidden}
-#plane{position:absolute;left:5%;bottom:20%;font-size:44px}
-#mult{position:absolute;left:50%;top:45%;transform:translate(-50%,-50%);font-size:58px;font-weight:900;text-shadow:0 0 20px #ff0a54}
-#status{position:absolute;left:50%;top:70%;transform:translate(-50%,-50%);background:rgba(0,0,0,.8);padding:8px 16px;border-radius:20px;font-size:13px;text-align:center}
+*{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
+body{background:#070a11;color:white;min-height:100vh}
+header{
+  height:65px;background:#111827;display:flex;align-items:center;
+  justify-content:space-between;padding:0 16px;border-bottom:1px solid #263247
+}
+.logo{font-size:21px;font-weight:bold}
+.logo span{color:#ff3b30}
+.points{background:#1d293b;padding:9px 14px;border-radius:20px;color:#55e58a}
+.container{max-width:900px;margin:auto;padding:15px}
+
+.nav{
+ display:flex;gap:8px;margin-bottom:15px;overflow:auto
+}
+.nav button{
+ background:#172033;color:white;border:0;padding:10px 15px;
+ border-radius:8px;white-space:nowrap
+}
+
+.game{
+ background:#0e1420;border:1px solid #273348;border-radius:14px;overflow:hidden
+}
+.screen{
+ height:390px;position:relative;overflow:hidden;
+ background:
+ linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),
+ linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);
+ background-size:40px 40px
+}
+.score{
+ position:absolute;top:43%;left:50%;transform:translate(-50%,-50%);
+ font-size:65px;font-weight:bold;color:#ff3b30
+}
+.status{
+ position:absolute;top:15px;left:15px;background:#172033;
+ padding:8px 13px;border-radius:20px;font-size:13px
+}
+.plane{
+ position:absolute;left:25px;bottom:25px;font-size:45px;
+ transition:all .12s linear
+}
+.controls{padding:18px;background:#111827}
+.controls button{
+ width:100%;padding:15px;border:0;border-radius:9px;
+ background:#20c997;color:white;font-size:17px;font-weight:bold
+}
+.controls button.stop{background:#ff3b30}
+
+.card{
+ background:#111827;border-radius:12px;padding:18px;margin-top:15px;
+ border:1px solid #273348
+}
+.row{
+ display:flex;justify-content:space-between;padding:11px 0;
+ border-bottom:1px solid #253044
+}
+.green{color:#55e58a}
+.red{color:#ff5252}
+.hidden{display:none}
+
+.history-item,.leader{
+ display:flex;justify-content:space-between;
+ padding:10px 0;border-bottom:1px solid #253044
+}
+.badge{
+ display:inline-block;background:#243149;padding:5px 9px;
+ border-radius:12px;font-size:12px
+}
+.notice{text-align:center;color:#77849a;font-size:12px;margin:18px}
 </style>
 </head>
+
 <body>
 
-<!-- LOGIN PAGE -->
-<div id="auth" class="card">
-<div style="text-align:center"><div style="font-size:40px">✈</div><h2>Beta Aviator</h2><p style="color:#666;font-size:11px">0716580098 ADMIN</p></div>
-<input id="phone" class="inp" placeholder="Phone 0716580098" value="0716580098">
-<input id="pass" type="password" class="inp" placeholder="Password any 4+">
-<button class="btn" onclick="login()">LOGIN & PLAY →</button>
-<p style="font-size:10px;color:#555;text-align:center;margin-top:8px">First time? Just enter phone + password → auto creates Demo 5000</p>
+<header>
+  <div class="logo">✈ BETA <span>AVIATOR</span></div>
+  <div class="points">
+    ⭐ <span id="points">5000</span>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="nav">
+    <button onclick="showSection('game')">🎮 Flight</button>
+    <button onclick="showSection('profile')">👤 Profile</button>
+    <button onclick="showSection('history')">📜 History</button>
+    <button onclick="showSection('leaderboard')">🏆 Leaderboard</button>
+  </div>
+
+  <!-- GAME -->
+
+  <section id="game">
+
+    <div class="game">
+
+      <div class="screen">
+
+        <div class="status" id="status">
+          Ready for flight
+        </div>
+
+        <div class="score" id="score">
+          1.00x
+        </div>
+
+        <div class="plane" id="plane">
+          ✈️
+        </div>
+
+      </div>
+
+      <div class="controls">
+
+        <button id="flightButton" onclick="startFlight()">
+          START FLIGHT
+        </button>
+
+      </div>
+
+    </div>
+
+    <div class="card">
+      <div class="row">
+        <span>Virtual Points</span>
+        <span class="green" id="points2">5000</span>
+      </div>
+
+      <div class="row">
+        <span>Best Flight</span>
+        <span id="best">1.00x</span>
+      </div>
+
+      <div class="row">
+        <span>Total Flights</span>
+        <span id="total">0</span>
+      </div>
+    </div>
+
+  </section>
+
+
+  <!-- PROFILE -->
+
+  <section id="profile" class="hidden">
+
+    <div class="card">
+
+      <h2>👤 Pilot Profile</h2>
+
+      <br>
+
+      <div class="row">
+        <span>Pilot</span>
+        <span>Dragon Pilot</span>
+      </div>
+
+      <div class="row">
+        <span>Status</span>
+        <span class="green">ACTIVE</span>
+      </div>
+
+      <div class="row">
+        <span>Points</span>
+        <span id="profilePoints">5000</span>
+      </div>
+
+      <div class="row">
+        <span>Best Flight</span>
+        <span id="profileBest">1.00x</span>
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- HISTORY -->
+
+  <section id="history" class="hidden">
+
+    <div class="card">
+
+      <h2>📜 Flight History</h2>
+
+      <br>
+
+      <div id="historyList">
+        No flights yet.
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- LEADERBOARD -->
+
+  <section id="leaderboard" class="hidden">
+
+    <div class="card">
+
+      <h2>🏆 Leaderboard</h2>
+
+      <br>
+
+      <div class="leader">
+        <span>🥇 SkyMaster</span>
+        <span class="green">18.72x</span>
+      </div>
+
+      <div class="leader">
+        <span>🥈 CaptainX</span>
+        <span class="green">14.36x</span>
+      </div>
+
+      <div class="leader">
+        <span>🥉 Pilot254</span>
+        <span class="green">11.85x</span>
+      </div>
+
+      <div class="leader">
+        <span>You</span>
+        <span id="myBest">1.00x</span>
+      </div>
+
+    </div>
+
+  </section>
+
+  <div class="notice">
+    BETA AVIATOR V3 — Virtual flight simulator. Points have no monetary value.
+  </div>
+
 </div>
 
-<!-- GAME PAGE -->
-<div id="game">
-<div class="top"><b>Beta</b><b style="color:#ff0a54"> Aviator</b><div style="margin-left:auto;background:#1e202f;padding:6px 12px;border-radius:20px;color:#ffcc00;font-weight
+
+<script>
+
+let points = Number(localStorage.getItem("betaPoints")) || 5000;
+let best = Number(localStorage.getItem("betaBest")) || 1;
+let total = Number(localStorage.getItem("betaTotal")) || 0;
+let history = JSON.parse(localStorage.getItem("betaHistory") || "[]");
+
+let flying = false;
+let multiplier = 1;
+let startTime;
+let timer;
+
+
+/* DISPLAY */
+
+function updateDisplay(){
+
+ document.getElementById("points").textContent =
+ points.toLocaleString();
+
+ document.getElementById("points2").textContent =
+ points.toLocaleString();
+
+ document.getElementById("profilePoints").textContent =
+ points.toLocaleString();
+
+ document.getElementById("best").textContent =
+ best.toFixed(2)+"x";
+
+ document.getElementById("profileBest").textContent =
+ best.toFixed(2)+"x";
+
+ document.getElementById("myBest").textContent =
+ best.toFixed(2)+"x";
+
+ document.getElementById("total").textContent =
+ total;
+
+}
+
+
+/* SAVE */
+
+function saveData(){
+
+ localStorage.setItem("betaPoints",points);
+ localStorage.setItem("betaBest",best);
+ localStorage.setItem("betaTotal",total);
+ localStorage.setItem(
+   "betaHistory",
+   JSON.stringify(history)
+ );
+
+}
+
+
+/* START */
+
+function startFlight(){
+
+ if(flying) return;
+
+ flying=true;
+ multiplier=1;
+ startTime=Date.now();
+
+ const button =
+ document.getElementById("flightButton");
+
+ button.textContent="LAND FLIGHT";
+ button.classList.add("stop");
+
+ button.onclick=landFlight;
+
+ document.getElementById("status")
+ .textContent="✈ FLIGHT IN PROGRESS";
+
+ document.getElementById("score")
+ .style.color="#ff3b30";
+
+ runFlight();
+
+}
+
+
+/* FLIGHT ENGINE */
+
+function runFlight(){
+
+ if(!flying)return;
+
+ let elapsed =
+ (Date.now()-startTime)/1000;
+
+ multiplier =
+ 1 + elapsed*.28 + elapsed*elapsed*.025;
+
+ document.getElementById("score")
+ .textContent =
+ multiplier.toFixed(2)+"x";
+
+ let progress =
+ Math.min(multiplier*8,88);
+
+ document.getElementById("plane")
+ .style.left =
+ progress+"%";
+
+ document.getElementById("plane")
+ .style.bottom =
+ (25+progress*.45)+"%";
+
+ timer=requestAnimationFrame(runFlight);
+
+}
+
+
+/* LAND */
+
+function landFlight(){
+
+ if(!flying)return;
+
+ flying=false;
+
+ cancelAnimationFrame(timer);
+
+ let finalMultiplier =
+ multiplier;
+
+ total++;
+
+ /*
+   Virtual points are awarded according
+   to the flight score.
+ */
+ let earned =
+ Math.floor(finalMultiplier*25);
+
+ points += earned;
+
+ if(finalMultiplier>best){
+   best=finalMultiplier;
+ }
+
+ history.unshift({
+   multiplier:finalMultiplier,
+   points:earned,
+   time:new Date().toLocaleTimeString()
+ });
+
+ history=history.slice(0,20);
+
+ saveData();
+ updateDisplay();
+ renderHistory();
+
+ document.getElementById("score")
+ .textContent =
+ finalMultiplier.toFixed(2)+"x";
+
+ document.getElementById("score")
+ .style.color="#55e58a";
+
+ document.getElementById("status")
+ .textContent =
+ "LANDED • +" + earned + " points";
+
+ const button =
+ document.getElementById("flightButton");
+
+ button.textContent="START FLIGHT";
+ button.classList.remove("stop");
+ button.onclick=startFlight;
+
+}
+
+
+/* HISTORY */
+
+function renderHistory(){
+
+ let box =
+ document.getElementById("historyList");
+
+ if(history.length===0){
+
+  box.innerHTML="No flights yet.";
+  return;
+
+ }
+
+ box.innerHTML=history.map((item,index)=>`
+
+  <div class="history-item">
+
+    <span>
+      Flight ${history.length-index}
+    </span>
+
+    <span>
+      ${item.multiplier.toFixed(2)}x
+    </span>
+
+    <span class="green">
+      +${item.points}
+    </span>
+
+  </div>
+
+ `).join("");
+
+}
+
+
+/* NAVIGATION */
+
+function showSection(section){
+
+ ["game","profile","history","leaderboard"]
+ .forEach(id=>{
+   document.getElementById(id)
+   .classList.add("hidden");
+ });
+
+ document.getElementById(section)
+ .classList.remove("hidden");
+
+}
+
+
+/* INITIALIZE */
+
+updateDisplay();
+renderHistory();
+
+</script>
+
+</body>
+</html>
