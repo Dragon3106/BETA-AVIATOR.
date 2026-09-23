@@ -1,1043 +1,288 @@
-
-/* =========================================================
-   BETA AVIATOR — COMPLETE VIRTUAL SIMULATOR JAVASCRIPT
-   Virtual points only — no real-money transactions
-========================================================= */
-
-let user = null;
-let selectedPoints = 100;
-let multiplier = 1;
-let running = false;
-let flightTimer = null;
-let sessionFlights = 0;
-let graphPoints = [];
-
-
-/* =========================================================
-   STORAGE
-========================================================= */
-
-function loadUser() {
-    try {
-        const saved = localStorage.getItem("betaAviatorUser");
-        user = saved ? JSON.parse(saved) : null;
-    } catch (error) {
-        user = null;
-        console.error(error);
-    }
-}
-
-function saveUser() {
-    localStorage.setItem(
-        "betaAviatorUser",
-        JSON.stringify(user)
-    );
-    updateUI();
-}
-
-
-/* =========================================================
-   REGISTRATION — 1
-========================================================= */
-
-function createAccount() {
-
-    const name = document.getElementById("regName").value.trim();
-    const contact = document.getElementById("regContact").value.trim();
-    const password = document.getElementById("regPassword").value;
-
-    const message = document.getElementById("regMsg");
-
-    if (!name || !contact || !password) {
-        message.style.color = "#ff4d6d";
-        message.textContent = "Please fill in all fields.";
-        return;
-    }
-
-    if (password.length < 4) {
-        message.style.color = "#ff4d6d";
-        message.textContent = "Password must contain at least 4 characters.";
-        return;
-    }
-
-    user = {
-        name: name,
-        contact: contact,
-        password: password,
-
-        balance: 5000,
-
-        xp: 0,
-        level: 1,
-
-        limit: "10",
-
-        history: [],
-
-        notifications: [
-            "Welcome to BETA AVIATOR!",
-            "Your virtual demo account has been created."
-        ]
-    };
-
-    saveUser();
-
-    message.style.color = "#35d51d";
-    message.textContent = "Account created successfully.";
-
-    setTimeout(function () {
-
-        document.getElementById("registerPage")
-            .classList.add("hidden");
-
-        document.getElementById("loginPage")
-            .classList.remove("hidden");
-
-        document.getElementById("loginContact").value = contact;
-        document.getElementById("loginPassword").value = "";
-
-        document.getElementById("loginMsg").textContent =
-            "Account created. Login to continue.";
-
-    }, 700);
-}
-
-
-/* =========================================================
-   LOGIN — 2
-========================================================= */
-
-function loginAccount() {
-
-    const contact =
-        document.getElementById("loginContact").value.trim();
-
-    const password =
-        document.getElementById("loginPassword").value;
-
-    const message =
-        document.getElementById("loginMsg");
-
-    const saved =
-        JSON.parse(
-            localStorage.getItem("betaAviatorUser")
-        );
-
-    if (!saved) {
-        message.style.color = "#ff4d6d";
-        message.textContent =
-            "No account found. Please register first.";
-        return;
-    }
-
-    if (
-        saved.contact === contact &&
-        saved.password === password
-    ) {
-
-        user = saved;
-
-        message.style.color = "#35d51d";
-        message.textContent = "Login successful.";
-
-        setTimeout(function () {
-
-            document.getElementById("registerPage")
-                .classList.add("hidden");
-
-            document.getElementById("loginPage")
-                .classList.add("hidden");
-
-            document.getElementById("app")
-                .classList.remove("hidden");
-
-            updateUI();
-            openPage("home");
-
-        }, 500);
-
-    } else {
-
-        message.style.color = "#ff4d6d";
-        message.textContent =
-            "Incorrect phone/email or password.";
-    }
-}
-
-
-/* =========================================================
-   PAGE SWITCHING
-========================================================= */
-
-function openPage(pageName) {
-
-    document.querySelectorAll(".appPage")
-        .forEach(function(page) {
-            page.classList.add("hidden");
-        });
-
-    const page =
-        document.getElementById(pageName);
-
-    if (page) {
-        page.classList.remove("hidden");
-    }
-
-    if (pageName === "game") {
-        updateGame();
-        setTimeout(drawCurrentGraph, 100);
-    }
-
-    updateUI();
-}
-
-
-/* =========================================================
-   PROFILE — 3
-========================================================= */
-
-function saveProfile() {
-
-    if (!user) return;
-
-    const name =
-        document.getElementById("profileName").value.trim();
-
-    const contact =
-        document.getElementById("profileContact").value.trim();
-
-    if (!name || !contact) {
-        alert("Please complete the profile.");
-        return;
-    }
-
-    user.name = name;
-    user.contact = contact;
-
-    user.notifications.unshift(
-        "Your profile was updated."
-    );
-
-    saveUser();
-
-    alert("Profile saved successfully.");
-}
-
-
-/* =========================================================
-   VERIFICATION — 4
-========================================================= */
-
-function verificationInfo() {
-
-    alert(
-        "This is a virtual simulator. " +
-        "Identity documents are not collected."
-    );
-}
-
-
-/* =========================================================
-   VIRTUAL WALLET — 5
-========================================================= */
-
-function addPoints() {
-
-    if (!user) return;
-
-    user.balance += 1000;
-
-    user.notifications.unshift(
-        "1,000 virtual points added."
-    );
-
-    saveUser();
-
-    alert("1,000 virtual points added.");
-}
-
-
-/* =========================================================
-   GAME POINT CONTROL — 6
-========================================================= */
-
-function changePoints(amount) {
-
-    selectedPoints += amount;
-
-    if (selectedPoints < 100) {
-        selectedPoints = 100;
-    }
-
-    if (selectedPoints > 5000) {
-        selectedPoints = 5000;
-    }
-
-    updatePointDisplay();
-}
-
-
-function setPoints(amount) {
-
-    selectedPoints = amount;
-
-    updatePointDisplay();
-}
-
-
-function updatePointDisplay() {
-
-    const selected =
-        document.getElementById("selectedPoints");
-
-    const startAmount =
-        document.getElementById("startAmount");
-
-    if (selected) {
-        selected.textContent =
-            selectedPoints.toLocaleString();
-    }
-
-    if (startAmount) {
-        startAmount.textContent =
-            selectedPoints.toLocaleString() + " PTS";
-    }
-}
-
-
-/* =========================================================
-   START VIRTUAL FLIGHT
-========================================================= */
-
-function startFlight() {
-
-    if (!user || running) return;
-
-    if (
-        user.limit !== "unlimited" &&
-        sessionFlights >= Number(user.limit)
-    ) {
-
-        setFlightStatus(
-            "SESSION FLIGHT LIMIT REACHED"
-        );
-
-        speak(
-            "Your session flight limit has been reached."
-        );
-
-        return;
-    }
-
-    if (user.balance < selectedPoints) {
-
-        setFlightStatus(
-            "NOT ENOUGH VIRTUAL POINTS"
-        );
-
-        speak("Not enough virtual points.");
-
-        return;
-    }
-
-    user.balance -= selectedPoints;
-
-    sessionFlights++;
-
-    multiplier = 1;
-
-    graphPoints = [];
-
-    running = true;
-
-    saveUser();
-
-    const startButton =
-        document.getElementById("startButton");
-
-    const landButton =
-        document.getElementById("landButton");
-
-    if (startButton) {
-        startButton.classList.add("hidden");
-    }
-
-    if (landButton) {
-        landButton.classList.remove("hidden");
-    }
-
-    setFlightStatus("FLIGHT IN PROGRESS");
-
-    speak("Flight started.");
-
-    beginFlightAnimation();
-}
-
-
-/* =========================================================
-   FLIGHT ANIMATION + GRAPH + AIRPLANE
-========================================================= */
-
-function beginFlightAnimation() {
-
-    clearInterval(flightTimer);
-
-    const canvas =
-        document.getElementById("flightCanvas");
-
-    if (!canvas) return;
-
-    const ctx =
-        canvas.getContext("2d");
-
-    resizeCanvas();
-
-    let x = 30;
-
-    graphPoints = [];
-
-    flightTimer = setInterval(function() {
-
-        if (!running) return;
-
-        multiplier +=
-            0.01 + Math.random() * 0.055;
-
-        const multiplierElement =
-            document.getElementById("multiplier");
-
-        if (multiplierElement) {
-            multiplierElement.textContent =
-                multiplier.toFixed(2) + "x";
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aviator Simulation Hub</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --accent-color: #e50914;
+            --text-color: #ffffff;
+            --text-muted: #aaaaaa;
+            --success-color: #4caf50;
         }
 
-        x += 7;
-
-        if (x > canvas.width + 50) {
-            x = 30;
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
-        const progress =
-            Math.min(multiplier / 8, 1);
-
-        const y =
-            canvas.height -
-            45 -
-            progress * (canvas.height - 100);
-
-        graphPoints.push({
-            x: x,
-            y: y
-        });
-
-        if (graphPoints.length > 120) {
-            graphPoints.shift();
+        h1 {
+            color: var(--accent-color);
+            margin-bottom: 20px;
         }
 
-        drawCanvas(ctx, canvas);
-
-        setFlightStatus(
-            "FLIGHT • " +
-            multiplier.toFixed(2) +
-            "x"
-        );
-
-    }, 180);
-}
-
-
-/* =========================================================
-   DRAW GRAPH
-========================================================= */
-
-function drawCanvas(ctx, canvas) {
-
-    ctx.clearRect(
-        0,
-        0,
-        canvas.width,
-        canvas.height
-    );
-
-
-    /* Background rays */
-
-    ctx.strokeStyle =
-        "rgba(255,255,255,0.07)";
-
-    ctx.lineWidth = 1;
-
-    for (let i = 0; i < 12; i++) {
-
-        ctx.beginPath();
-
-        ctx.moveTo(
-            0,
-            canvas.height
-        );
-
-        ctx.lineTo(
-            canvas.width,
-            canvas.height - i * 35
-        );
-
-        ctx.stroke();
-    }
-
-
-    /* Graph */
-
-    if (graphPoints.length < 2) {
-        drawAirplane(
-            ctx,
-            50,
-            canvas.height - 55
-        );
-        return;
-    }
-
-    ctx.beginPath();
-
-    graphPoints.forEach(function(point, index) {
-
-        if (index === 0) {
-            ctx.moveTo(
-                point.x,
-                point.y
-            );
-        } else {
-            ctx.lineTo(
-                point.x,
-                point.y
-            );
+        .container {
+            display: flex;
+            gap: 20px;
+            max-width: 1200px;
+            width: 100%;
         }
-    });
 
-    ctx.strokeStyle = "#e71955";
-    ctx.lineWidth = 5;
-
-    ctx.shadowBlur = 15;
-    ctx.shadowColor = "#e71955";
-
-    ctx.stroke();
-
-    ctx.shadowBlur = 0;
-
-
-    /* Airplane */
-
-    const last =
-        graphPoints[graphPoints.length - 1];
-
-    drawAirplane(
-        ctx,
-        last.x,
-        last.y
-    );
-}
-
-
-/* =========================================================
-   AIRPLANE
-========================================================= */
-
-function drawAirplane(ctx, x, y) {
-
-    ctx.save();
-
-    ctx.translate(x, y);
-
-    ctx.rotate(-0.25);
-
-    ctx.font = "42px Arial";
-
-    ctx.fillStyle = "#ffffff";
-
-    ctx.shadowBlur = 12;
-    ctx.shadowColor = "#e71955";
-
-    ctx.fillText("✈", -18, 15);
-
-    ctx.restore();
-
-    ctx.shadowBlur = 0;
-}
-
-
-/* =========================================================
-   CANVAS SIZE
-========================================================= */
-
-function resizeCanvas() {
-
-    const canvas =
-        document.getElementById("flightCanvas");
-
-    if (!canvas) return;
-
-    canvas.width =
-        canvas.clientWidth;
-
-    canvas.height =
-        canvas.clientHeight;
-
-    drawCurrentGraph();
-}
-
-
-function drawCurrentGraph() {
-
-    const canvas =
-        document.getElementById("flightCanvas");
-
-    if (!canvas) return;
-
-    const ctx =
-        canvas.getContext("2d");
-
-    drawCanvas(ctx, canvas);
-}
-
-
-/* =========================================================
-   LAND VIRTUAL FLIGHT
-========================================================= */
-
-function landFlight() {
-
-    if (!running || !user) return;
-
-    running = false;
-
-    clearInterval(flightTimer);
-
-    const earned =
-        Math.floor(
-            selectedPoints * multiplier
-        );
-
-    user.balance += earned;
-
-    user.xp +=
-        Math.floor(multiplier * 10);
-
-
-    /* Level system */
-
-    if (user.xp >= 1000) {
-
-        user.level += 1;
-
-        user.xp = 0;
-
-        user.notifications.unshift(
-            "Congratulations! You reached Level " +
-            user.level + "."
-        );
-    }
-
-
-    /* History */
-
-    user.history.unshift({
-
-        date:
-            new Date().toLocaleString(),
-
-        multiplier:
-            multiplier.toFixed(2) + "x",
-
-        points:
-            earned
-    });
-
-
-    user.notifications.unshift(
-        "Flight completed at " +
-        multiplier.toFixed(2) +
-        "x."
-    );
-
-
-    saveUser();
-
-
-    const startButton =
-        document.getElementById("startButton");
-
-    const landButton =
-        document.getElementById("landButton");
-
-    if (startButton) {
-        startButton.classList.remove("hidden");
-    }
-
-    if (landButton) {
-        landButton.classList.add("hidden");
-    }
-
-
-    setFlightStatus(
-        "LANDED • +" +
-        earned +
-        " VIRTUAL POINTS"
-    );
-
-
-    speak(
-        "Flight landed at " +
-        multiplier.toFixed(2) +
-        " times."
-    );
-
-    updateGame();
-}
-
-
-/* =========================================================
-   FLIGHT STATUS
-========================================================= */
-
-function setFlightStatus(text) {
-
-    const element =
-        document.getElementById("flightStatus");
-
-    if (element) {
-        element.textContent = text;
-    }
-}
-
-
-/* =========================================================
-   VOICE
-========================================================= */
-
-function speak(text) {
-
-    if (
-        typeof window.speechSynthesis ===
-        "undefined"
-    ) {
-        return;
-    }
-
-    window.speechSynthesis.cancel();
-
-    const speech =
-        new SpeechSynthesisUtterance(text);
-
-    speech.rate = 0.9;
-    speech.pitch = 1;
-    speech.volume = 1;
-
-    window.speechSynthesis.speak(speech);
-}
-
-
-/* =========================================================
-   HISTORY — 7
-========================================================= */
-
-function updateHistory() {
-
-    const table =
-        document.getElementById("historyTable");
-
-    if (!table || !user) return;
-
-    table.innerHTML = "";
-
-    if (user.history.length === 0) {
-
-        table.innerHTML =
-            "<tr><td colspan='3'>No flights yet.</td></tr>";
-
-        return;
-    }
-
-    user.history.forEach(function(item) {
-
-        const row =
-            document.createElement("tr");
-
-        row.innerHTML =
-            "<td>" + item.date + "</td>" +
-            "<td>" + item.multiplier + "</td>" +
-            "<td>+" +
-            item.points +
-            " PTS</td>";
-
-        table.appendChild(row);
-    });
-}
-
-
-/* =========================================================
-   RECENT FLIGHTS
-========================================================= */
-
-function updateFlightList() {
-
-    const list =
-        document.getElementById("flightList");
-
-    if (!list || !user) return;
-
-    list.innerHTML = "";
-
-    if (user.history.length === 0) {
-
-        list.innerHTML =
-            "<p>No flights yet.</p>";
-
-        return;
-    }
-
-    user.history
-        .slice(0, 8)
-        .forEach(function(item) {
-
-            const row =
-                document.createElement("div");
-
-            row.className = "flight-row";
-
-            row.innerHTML =
-                "<span>✈ " +
-                item.date +
-                "</span>" +
-
-                "<span>" +
-                item.multiplier +
-                "</span>" +
-
-                "<span>+" +
-                item.points +
-                " PTS</span>";
-
-            list.appendChild(row);
-        });
-}
-
-
-/* =========================================================
-   NOTIFICATIONS — 8
-========================================================= */
-
-function updateNotifications() {
-
-    const list =
-        document.getElementById(
-            "notificationList"
-        );
-
-    if (!list || !user) return;
-
-    list.innerHTML = "";
-
-    user.notifications
-        .slice(0, 15)
-        .forEach(function(message) {
-
-            const item =
-                document.createElement("div");
-
-            item.className = "card";
-
-            item.textContent = message;
-
-            list.appendChild(item);
-        });
-}
-
-
-/* =========================================================
-   SECURITY — 9
-========================================================= */
-
-function changePassword() {
-
-    if (!user) return;
-
-    const newPassword =
-        document.getElementById(
-            "newPassword"
-        ).value;
-
-    if (newPassword.length < 4) {
-
-        alert(
-            "Password must contain at least 4 characters."
-        );
-
-        return;
-    }
-
-    user.password = newPassword;
-
-    user.notifications.unshift(
-        "Your password was changed."
-    );
-
-    saveUser();
-
-    document.getElementById(
-        "newPassword"
-    ).value = "";
-
-    alert("Password changed successfully.");
-}
-
-
-/* =========================================================
-   RESPONSIBLE USE — 10
-========================================================= */
-
-function saveLimit() {
-
-    if (!user) return;
-
-    const limit =
-        document.getElementById(
-            "flightLimit"
-        ).value;
-
-    user.limit = limit;
-
-    saveUser();
-
-    alert("Virtual flight limit saved.");
-}
-
-
-function pauseGame() {
-
-    running = false;
-
-    clearInterval(flightTimer);
-
-    setFlightStatus(
-        "SIMULATOR PAUSED"
-    );
-
-    const message =
-        document.getElementById("pauseMsg");
-
-    if (message) {
-        message.textContent =
-            "The simulator has been paused.";
-    }
-}
-
-
-/* =========================================================
-   SUPPORT — 11
-========================================================= */
-
-function sendSupport() {
-
-    if (!user) return;
-
-    const subject =
-        document.getElementById(
-            "supportSubject"
-        ).value.trim();
-
-    const message =
-        document.getElementById(
-            "supportText"
-        ).value.trim();
-
-    const result =
-        document.getElementById(
-            "supportMsg"
-        );
-
-    if (!subject || !message) {
-
-        result.textContent =
-            "Please complete both fields.";
-
-        return;
-    }
-
-    user.notifications.unshift(
-        "Support request submitted: " +
-        subject
-    );
-
-    saveUser();
-
-    result.style.color = "#35d51d";
-
-    result.textContent =
-        "Support request submitted successfully.";
-
-    document.getElementById(
-        "supportSubject"
-    ).value = "";
-
-    document.getElementById(
-        "supportText"
-    ).value = "";
-}
-
-
-/* =========================================================
-   FINANCIAL SECTION — 12
-========================================================= */
-
-function showFinancialInfo() {
-
-    alert(
-        "This is a virtual simulator. " +
-        "No real-money deposits, withdrawals, " +
-        "payments or cash prizes are enabled."
-    );
-}
-
-
-/* =========================================================
-   GAME UPDATE
-========================================================= */
-
-function updateGame() {
-
-    if (!user) return;
-
-    const balance =
-        user.balance.toLocaleString();
-
-    const gameBalance =
-        document.getElementById(
-            "gameBalance"
-        );
-
-    if (gameBalance) {
-        gameBalance.textContent = balance;
-    }
-
-    updatePointDisplay();
-    updateFlightList();
-}
-
-
-/* =========================================================
-   COMPLETE UI UPDATE
-========================================================= */
-
-function updateUI() {
-
-    if (!user) return;
-
-    const headerBalance =
-        document.getElementById(
-            "headerBalance"
-        );
-
-    if (headerBalance) {
-        headerBalance.textContent =
-            user.balance.toLocaleString() +
-            " PTS";
- 
+        /* Sidebar Navigation */
+        .sidebar {
+            width: 250px;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+
+        .sidebar h3 {
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+
+        .menu-item {
+            padding: 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            margin-bottom: 5px;
+            transition: background 0.2s;
+            font-size: 14px;
+        }
+
+        .menu-item:hover, .menu-item.active {
+            background-color: var(--accent-color);
+        }
+
+        /* Main Content Viewports */
+        .main-content {
+            flex: 1;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            min-height: 500px;
+        }
+
+        .section-panel {
+            display: none;
+        }
+
+        .section-panel.active {
+            display: block;
+        }
+
+        /* Form styling */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--text-muted);
+        }
+
+        input[type="text"], input[type="password"], input[type="number"], select {
+            width: 100%;
+            padding: 10px;
+            background-color: #2a2a2a;
+            border: 1px solid #444;
+            color: white;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        /* Section 6: Aviator Game Area Specifics */
+        .game-container {
+            background-color: #0f0f0f;
+            border: 2px solid #333;
+            border-radius: 8px;
+            padding: 20px;
+            position: relative;
+            height: 300px;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #graph-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .multiplier-display {
+            position: relative;
+            font-size: 48px;
+            font-weight: bold;
+            color: var(--success-color);
+            z-index: 10;
+        }
+
+        .game-controls {
+            margin-top: 15px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        /* History Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #333;
+        }
+
+        th {
+            color: var(--text-muted);
+        }
+
+        .status-msg {
+            margin-top: 10px;
+            color: #ffc107;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Aviator Simulation Platform</h1>
+
+    <div class="container">
+        <!-- Sidebar Menu targeting the 12 instructions -->
+        <div class="sidebar">
+            <h3>Navigation</h3>
+            <div class="menu-item active" onclick="switchSection(1)">1. Registration</div>
+            <div class="menu-item" onclick="switchSection(2)">2. Login</div>
+            <div class="menu-item" onclick="switchSection(3)">3. Profile</div>
+            <div class="menu-item" onclick="switchSection(4)">4. Identity Verification</div>
+            <div class="menu-item" onclick="switchSection(5)">5. Virtual Wallet</div>
+            <div class="menu-item" onclick="switchSection(6)">6. Game Area (Plane)</div>
+            <div class="menu-item" onclick="switchSection(7)">7. Game History</div>
+            <div class="menu-item" onclick="switchSection(8)">8. Notifications</div>
+            <div class="menu-item" onclick="switchSection(9)">9. Security</div>
+            <div class="menu-item" onclick="switchSection(10)">10. Responsible Use</div>
+            <div class="menu-item" onclick="switchSection(11)">11. Support</div>
+            <div class="menu-item" onclick="switchSection(12)">12. Financial Notice</div>
+        </div>
+
+        <!-- Main Content Area containing the panel for each section -->
+        <div class="main-content">
+            
+            <!-- 1. Registration -->
+            <div id="section-1" class="section-panel active">
+                <h2>1. Account Registration</h2>
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="reg-username" placeholder="Choose a username">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="reg-password" placeholder="Create a password">
+                </div>
+                <button onclick="handleRegister()">Register Account</button>
+                <div id="reg-status" class="status-msg"></div>
+            </div>
+
+            <!-- 2. Login -->
+            <div id="section-2" class="section-panel">
+                <h2>2. User Login</h2>
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="login-username" placeholder="Enter username">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="login-password" placeholder="Enter password">
+                </div>
+                <button onclick="handleLogin()">Login</button>
+                <div id="login-status" class="status-msg"></div>
+            </div>
+
+            <!-- 3. Profile -->
+            <div id="section-3" class="section-panel">
+                <h2>3. User Profile</h2>
+                <p><strong>Username:</strong> <span id="prof-username">Guest</span></p>
+                <p><strong>Account Status:</strong> <span id="prof-status" style="color:var(--accent-color)">Unverified</span></p>
+                <p><strong>Joined:</strong> <span id="prof-date">N/A</span></p>
+            </div>
+
+            
+            <div id="section-4" class="section-panel">
+                <h2>4. Identity Verification (KYC)</h2>
+                <p>Please upload a government-issued ID to verify your profile identity.</p>
+                <div class="form-group">
+                    <label>Document Type</label>
+                    <select id="kyc-type">
+                        <option>Passport</option>
+                        <option>Driver's License</option>
+                        <option>National ID</option>
+                    </select>
+                </div>
+                <button onclick="handleVerification()">Submit Mock Verification</button>
+                <div id="kyc-status" class="status-msg"></div>
+            </div>
+
+            <!-- 5. Virtual Wallet -->
+            <div id="section-5" class="section-panel">
+                <h2>5. Virtual Wallet</h2>
+                <h3 style="font-size: 28px;">Balance: $<span id="wallet-balance">1000.00</span></h3>
+                <div class="form-group" style="display: flex; gap: 10px;">
+                    <input type="number" id="wallet-amount" value="100" min="10">
+                    <button onclick="adjustWallet('deposit')" style="background-color: var(--success-color);">Deposit</button>
+                    <button onclick="adjustWallet('withdraw')">Withdraw</button>
+                </div>
+                <div id="wallet-status" class="status-msg"></div>
+            </div>
+
+            <!-- 6. Game Area with airplane + graph + voice -->
+            <div id="section-6" class="section-panel">
+                <h2>6. Aviator Game Dashboard</h2>
+                <p style="font-size:12px; color:var(--text-muted);">🔊 Audio Voiceover System is active. Plane paths track exponentially on a live grid layout.</p>
+                
+                <div class="game-container">
+                    <canvas id="graph-canvas" width="600" height="300"></canvas>
+                    <div id="live-multiplier" class="multiplier-display">1.00x</div>
+                </div>
+
+                <div class="game-controls">
+                    <div>
+                        <label>Bet Amount ($)</label>
+                        <input type="number" id="bet-amount" value="10" min="1" style="width: 100px;">
+                    </div>
+                    <button id="btn-bet" onclick="placeBet()">Place Bet</button>
