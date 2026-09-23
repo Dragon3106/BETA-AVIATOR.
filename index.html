@@ -3,12 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Aviator – 12 Instructions</title>
+  <title>Aviator Demo – Full Account + Play</title>
   <style>
     :root {
       --bg: #0b0e11;
       --card: #161a1f;
       --accent: #e11d48;
+      --green: #22c55e;
       --text: #f1f5f9;
       --muted: #94a3b8;
       --border: #1e293b;
@@ -18,33 +19,176 @@
       font-family: system-ui, -apple-system, sans-serif;
       background: var(--bg);
       color: var(--text);
-      line-height: 1.6;
       min-height: 100vh;
+      line-height: 1.5;
     }
+    /* ===== AUTH SCREENS ===== */
+    .auth-screen {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .auth-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem;
+      width: 100%;
+      max-width: 400px;
+    }
+    .auth-box h1 {
+      text-align: center;
+      margin-bottom: 0.5rem;
+      font-size: 1.6rem;
+    }
+    .auth-box h1 span { color: var(--accent); }
+    .auth-box p.sub {
+      text-align: center;
+      color: var(--muted);
+      margin-bottom: 1.5rem;
+      font-size: 0.9rem;
+    }
+    .form-group { margin-bottom: 1rem; }
+    .form-group label {
+      display: block;
+      font-size: 0.85rem;
+      margin-bottom: 0.3rem;
+      color: var(--muted);
+    }
+    .form-group input {
+      width: 100%;
+      padding: 0.7rem 1rem;
+      background: #0f1318;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: white;
+      font-size: 1rem;
+    }
+    .form-group input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 0.85rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+      margin-top: 0.5rem;
+    }
+    .btn-primary:hover { background: #be123c; }
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      margin-top: 0.8rem;
+    }
+    .btn-secondary:hover { border-color: var(--muted); color: white; }
+    .error {
+      background: #450a0a;
+      color: #fca5a5;
+      padding: 0.6rem 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      font-size: 0.9rem;
+      display: none;
+    }
+    .switch-link {
+      text-align: center;
+      margin-top: 1.2rem;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+    .switch-link a {
+      color: var(--accent);
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    /* ===== MAIN APP ===== */
+    #app { display: none; }
     header {
       background: var(--card);
       border-bottom: 1px solid var(--border);
-      padding: 1.2rem 1.5rem;
+      padding: 0.8rem 1.2rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
       position: sticky;
       top: 0;
-      z-index: 50;
+      z-index: 100;
     }
-    header h1 { font-size: 1.25rem; font-weight: 700; }
-    header h1 span { color: var(--accent); }
+    .logo { font-weight: 700; font-size: 1.2rem; }
+    .logo span { color: var(--accent); }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .balance {
+      background: #0f1318;
+      padding: 0.4rem 0.9rem;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+    .balance span { color: var(--green); }
+    .user-menu {
+      position: relative;
+    }
+    .user-btn {
+      background: none;
+      border: 1px solid var(--border);
+      color: white;
+      padding: 0.4rem 0.9rem;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    .dropdown {
+      position: absolute;
+      right: 0;
+      top: 110%;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      min-width: 180px;
+      display: none;
+      z-index: 200;
+    }
+    .dropdown.show { display: block; }
+    .dropdown button {
+      display: block;
+      width: 100%;
+      text-align: left;
+      background: none;
+      border: none;
+      color: var(--text);
+      padding: 0.7rem 1rem;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    .dropdown button:hover { background: #1e293b; }
+
     .layout {
       display: grid;
-      grid-template-columns: 280px 1fr;
-      max-width: 1200px;
-      margin: 0 auto;
-      min-height: calc(100vh - 70px);
+      grid-template-columns: 240px 1fr;
+      min-height: calc(100vh - 58px);
     }
     nav {
       background: var(--card);
       border-right: 1px solid var(--border);
-      padding: 1.5rem 0;
+      padding: 1rem 0;
       overflow-y: auto;
     }
     nav button {
@@ -54,10 +198,10 @@
       background: none;
       border: none;
       color: var(--muted);
-      padding: 0.75rem 1.5rem;
-      font-size: 0.95rem;
+      padding: 0.7rem 1.2rem;
+      font-size: 0.92rem;
       cursor: pointer;
-      transition: all 0.15s;
+      transition: 0.15s;
     }
     nav button:hover,
     nav button.active {
@@ -67,310 +211,485 @@
     }
     nav button span {
       display: inline-block;
-      width: 24px;
+      width: 22px;
       color: var(--accent);
       font-weight: 600;
     }
+
     main {
-      padding: 2rem 2.5rem;
+      padding: 1.5rem;
       overflow-y: auto;
     }
-    .section { display: none; animation: fade 0.25s ease; }
-    .section.active { display: block; }
+    .section { display: none; }
+    .section.active { display: block; animation: fade 0.2s ease; }
     @keyframes fade {
-      from { opacity: 0; transform: translateY(8px); }
-      to   { opacity: 1; transform: translateY(0); }
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: none; }
     }
     h2 {
-      font-size: 1.6rem;
+      font-size: 1.4rem;
       margin-bottom: 1rem;
       display: flex;
       align-items: center;
-      gap: 0.6rem;
+      gap: 0.5rem;
     }
     h2 .num {
       background: var(--accent);
-      color: white;
-      width: 32px;
-      height: 32px;
+      width: 28px;
+      height: 28px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       font-weight: 700;
     }
-    p, li { color: var(--muted); margin-bottom: 0.8rem; }
-    ul { padding-left: 1.4rem; margin-bottom: 1.2rem; }
     .card {
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 1.4rem;
-      margin-top: 1.2rem;
+      padding: 1.3rem;
+      margin-bottom: 1rem;
     }
     .tip {
-      border-left: 4px solid var(--accent);
-      padding-left: 1rem;
-      margin: 1.2rem 0;
+      border-left: 3px solid var(--accent);
+      padding-left: 0.9rem;
       color: #fca5a5;
+      margin: 1rem 0;
+      font-size: 0.9rem;
     }
-    footer {
-      text-align: center;
-      padding: 1.5rem;
-      color: var(--muted);
-      font-size: 0.85rem;
-      border-top: 1px solid var(--border);
+
+    /* ===== GAME AREA ===== */
+    .game-container {
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      gap: 1.2rem;
     }
-    @media (max-width: 768px) {
+    @media (max-width: 900px) {
       .layout { grid-template-columns: 1fr; }
       nav {
         display: flex;
         overflow-x: auto;
-        padding: 0.5rem;
+        padding: 0.4rem;
         border-right: none;
         border-bottom: 1px solid var(--border);
       }
       nav button {
         white-space: nowrap;
-        padding: 0.6rem 1rem;
         border-left: none !important;
         border-bottom: 3px solid transparent;
+        padding: 0.6rem 1rem;
       }
       nav button.active { border-bottom-color: var(--accent); }
+      .game-container { grid-template-columns: 1fr; }
     }
+    .game-screen {
+      background: #0a0d10;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      position: relative;
+      height: 420px;
+      overflow: hidden;
+    }
+    #gameCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .multiplier-display {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 3.5rem;
+      font-weight: 800;
+      color: white;
+      text-shadow: 0 0 20px rgba(225,29,72,0.6);
+      pointer-events: none;
+      z-index: 5;
+    }
+    .multiplier-display.crashed { color: var(--accent); }
+    .status-bar {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      right: 12px;
+      display: flex;
+      justify-content: space-between;
+      z-index: 10;
+      font-size: 0.85rem;
+    }
+    .status-bar .round { background: rgba(0,0,0,0.5); padding: 0.3rem 0.7rem; border-radius: 6px; }
+    .bet-panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.2rem;
+    }
+    .bet-panel h3 { margin-bottom: 1rem; font-size: 1.1rem; }
+    .bet-input {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 0.8rem;
+    }
+    .bet-input input {
+      flex: 1;
+      padding: 0.7rem;
+      background: #0f1318;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: white;
+      font-size: 1.1rem;
+      text-align: center;
+    }
+    .quick-bets {
+      display: flex;
+      gap: 0.4rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    .quick-bets button {
+      flex: 1;
+      min-width: 50px;
+      padding: 0.4rem;
+      background: #1e293b;
+      border: none;
+      border-radius: 6px;
+      color: white;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+    .quick-bets button:hover { background: #334155; }
+    .btn-bet {
+      background: var(--green);
+      color: #052e16;
+      margin-bottom: 0.6rem;
+    }
+    .btn-bet:hover { background: #16a34a; }
+    .btn-bet:disabled {
+      background: #374151;
+      color: #9ca3af;
+      cursor: not-allowed;
+    }
+    .btn-cashout {
+      background: var(--accent);
+      color: white;
+    }
+    .btn-cashout:hover { background: #be123c; }
+    .btn-cashout:disabled {
+      background: #374151;
+      color: #9ca3af;
+      cursor: not-allowed;
+    }
+    .auto-cash {
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+    .auto-cash input {
+      width: 70px;
+      padding: 0.3rem;
+      background: #0f1318;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: white;
+      margin-left: 0.4rem;
+    }
+
+    /* History table */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+    th, td {
+      padding: 0.6rem 0.8rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    th { color: var(--muted); font-weight: 500; }
+    .win { color: var(--green); }
+    .loss { color: var(--accent); }
+
+    .hidden { display: none !important; }
   </style>
 </head>
 <body>
-  <header>
-    <h1>Aviator <span>Instructions</span></h1>
-    <div style="font-size:0.9rem;color:var(--muted)">12 Sections</div>
-  </header>
 
-  <div class="layout">
-    <nav id="nav"></nav>
-    <main id="content"></main>
+  <!-- ========== LOGIN / REGISTER ========== -->
+  <div id="authScreen" class="auth-screen">
+    <div class="auth-box">
+      <h1>Aviator <span>Demo</span></h1>
+      <p class="sub">Create an account or log in to play</p>
+
+      <div id="authError" class="error"></div>
+
+      <!-- Login Form -->
+      <div id="loginForm">
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="loginEmail" placeholder="you@example.com" value="demo@aviator.com" />
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="loginPass" placeholder="••••••••" value="demo1234" />
+        </div>
+        <button class="btn btn-primary" onclick="doLogin()">Log In</button>
+        <div class="switch-link">
+          Don't have an account? <a onclick="showRegister()">Register</a>
+        </div>
+      </div>
+
+      <!-- Register Form -->
+      <div id="registerForm" class="hidden">
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="regEmail" placeholder="you@example.com" />
+        </div>
+        <div class="form-group">
+          <label>Password (min 6 chars)</label>
+          <input type="password" id="regPass" placeholder="••••••••" />
+        </div>
+        <div class="form-group">
+          <label>Display Name</label>
+          <input type="text" id="regName" placeholder="Player123" />
+        </div>
+        <button class="btn btn-primary" onclick="doRegister()">Create Account</button>
+        <div class="switch-link">
+          Already have an account? <a onclick="showLogin()">Log In</a>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <footer>
-    Play responsibly • 18+ only • This is an informational demo
-  </footer>
+  <!-- ========== MAIN APP ========== -->
+  <div id="app">
+    <header>
+      <div class="logo">Aviator <span>Demo</span></div>
+      <div class="header-right">
+        <div class="balance">Balance: <span id="headerBalance">0.00</span> USD</div>
+        <div class="user-menu">
+          <button class="user-btn" id="userBtn" onclick="toggleDropdown()">Player ▾</button>
+          <div class="dropdown" id="userDropdown">
+            <button onclick="showSection(3)">Profile</button>
+            <button onclick="showSection(9)">Security</button>
+            <button onclick="logout()">Log Out</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="layout">
+      <nav id="sidebar"></nav>
+      <main id="mainContent"></main>
+    </div>
+  </div>
 
   <script>
-    // ========== DATA FOR ALL 12 SECTIONS ==========
-    const sections = [
-      {
-        id: 1,
-        title: "Registration",
-        content: `
-          <p>Create your account in a few simple steps:</p>
-          <ul>
-            <li>Enter a valid email address and choose a strong password.</li>
-            <li>Confirm your email via the link we send you.</li>
-            <li>Accept the Terms of Service and Privacy Policy.</li>
-            <li>Optionally enable 2-Factor Authentication during signup.</li>
-          </ul>
-          <div class="tip">Never share your password or verification codes with anyone.</div>
-        `
-      },
-      {
-        id: 2,
-        title: "Login",
-        content: `
-          <p>Access your account securely:</p>
-          <ul>
-            <li>Use your registered email + password.</li>
-            <li>If 2FA is enabled, enter the code from your authenticator app.</li>
-            <li>Use “Forgot password” to reset via email if needed.</li>
-            <li>Sessions expire after a period of inactivity for security.</li>
-          </ul>
-        `
-      },
-      {
-        id: 3,
-        title: "Profile",
-        content: `
-          <p>Manage your personal information:</p>
-          <ul>
-            <li>Update display name, avatar and contact details.</li>
-            <li>View account creation date and last login.</li>
-            <li>Change password and manage linked devices.</li>
-            <li>Set preferred language and notification preferences.</li>
-          </ul>
-        `
-      },
-      {
-        id: 4,
-        title: "Identity verification",
-        content: `
-          <p>Complete KYC to unlock higher limits and withdrawals:</p>
-          <ul>
-            <li>Upload a government-issued ID (passport, national ID or driver’s license).</li>
-            <li>Take a live selfie for face matching.</li>
-            <li>Provide proof of address if requested.</li>
-            <li>Verification usually takes a few minutes to 24 hours.</li>
-          </ul>
-          <div class="tip">All documents are encrypted and processed securely.</div>
-        `
-      },
-      {
-        id: 5,
-        title: "Virtual wallet",
-        content: `
-          <p>Your in-game balance and transaction center:</p>
-          <ul>
-            <li>View current balance and pending transactions.</li>
-            <li>Deposit via supported payment methods.</li>
-            <li>Withdraw to your verified bank or crypto wallet.</li>
-            <li>See full transaction history with filters.</li>
-          </ul>
-        `
-      },
-      {
-        id: 6,
-        title: "Game area with airplane + graph + voice",
-        content: `
-          <p>The main play screen contains three key elements:</p>
-          <ul>
-            <li><strong>Airplane</strong> – flies upward while the multiplier increases.</li>
-            <li><strong>Live graph</strong> – shows the current multiplier in real time.</li>
-            <li><strong>Voice / sound</strong> – announces key moments and can be muted.</li>
-          </ul>
-          <div class="card">
-            <p><strong>How to play:</strong></p>
-            <ol>
-              <li>Place your bet before the round starts.</li>
-              <li>Watch the airplane take off and the multiplier rise.</li>
-              <li>Cash out before the airplane flies away to lock in your win.</li>
-              <li>If the plane disappears before you cash out, the bet is lost.</li>
-            </ol>
-          </div>
-        `
-      },
-      {
-        id: 7,
-        title: "Game history",
-        content: `
-          <p>Review past rounds and your personal results:</p>
-          <ul>
-            <li>See the last 50–100 crash points.</li>
-            <li>Filter by date or by your own bets only.</li>
-            <li>View detailed bet information (amount, cash-out multiplier, profit/loss).</li>
-            <li>Export history if needed for personal records.</li>
-          </ul>
-        `
-      },
-      {
-        id: 8,
-        title: "Notifications",
-        content: `
-          <p>Stay informed about important events:</p>
-          <ul>
-            <li>Deposit / withdrawal confirmations.</li>
-            <li>Promotion and bonus alerts.</li>
-            <li>Security alerts (new login, password change).</li>
-            <li>You can turn categories on/off in Profile → Notifications.</li>
-          </ul>
-        `
-      },
-      {
-        id: 9,
-        title: "Security",
-        content: `
-          <p>Protect your account with these tools:</p>
-          <ul>
-            <li>Enable 2-Factor Authentication (recommended).</li>
-            <li>Review active sessions and log out remotely.</li>
-            <li>Set a withdrawal lock / cool-down period.</li>
-            <li>Change password regularly and never reuse it on other sites.</li>
-          </ul>
-          <div class="tip">We will never ask for your password or 2FA codes via email or chat.</div>
-        `
-      },
-      {
-        id: 10,
-        title: "Responsible-use controls",
-        content: `
-          <p>Tools to help you stay in control:</p>
-          <ul>
-            <li>Set daily / weekly deposit limits.</li>
-            <li>Set loss limits and session time limits.</li>
-            <li>Self-exclude for a chosen period (24 h – permanent).</li>
-            <li>Reality-check pop-ups that remind you how long you’ve been playing.</li>
-          </ul>
-          <div class="tip">If you feel you need help, contact support or visit a responsible-gambling organization.</div>
-        `
-      },
-      {
-        id: 11,
-        title: "Support",
-        content: `
-          <p>We’re here to help 24/7:</p>
-          <ul>
-            <li>Live chat (fastest response).</li>
-            <li>Email support with ticket tracking.</li>
-            <li>FAQ and knowledge base.</li>
-            <li>Phone support in selected regions.</li>
-          </ul>
-        `
-      },
-      {
-        id: 12,
-        title: "Financial functions notice",
-        content: `
-          <p>Important legal and financial information:</p>
-          <ul>
-            <li>All funds are held in segregated accounts where required by law.</li>
-            <li>Deposits and withdrawals are subject to verification and processing times.</li>
-            <li>Currency conversion fees may apply.</li>
-            <li>We are licensed and regulated. Please play only if it is legal in your jurisdiction.</li>
-            <li>Gambling involves risk. Never bet more than you can afford to lose.</li>
-          </ul>
-          <div class="card">
-            <p>By using this platform you confirm that you are of legal age and that online gambling is permitted in your location.</p>
-          </div>
-        `
-      }
+    // ===================== DATA & STATE =====================
+    const SECTIONS = [
+      { id: 1, title: "Registration" },
+      { id: 2, title: "Login" },
+      { id: 3, title: "Profile" },
+      { id: 4, title: "Identity verification" },
+      { id: 5, title: "Virtual wallet" },
+      { id: 6, title: "Game area" },
+      { id: 7, title: "Game history" },
+      { id: 8, title: "Notifications" },
+      { id: 9, title: "Security" },
+      { id: 10, title: "Responsible-use controls" },
+      { id: 11, title: "Support" },
+      { id: 12, title: "Financial functions notice" }
     ];
 
-    // ========== RENDER NAVIGATION ==========
-    const nav = document.getElementById('nav');
-    sections.forEach(s => {
-      const btn = document.createElement('button');
-      btn.innerHTML = `<span>${s.id}</span> ${s.title}`;
-      btn.dataset.id = s.id;
-      btn.addEventListener('click', () => showSection(s.id));
-      nav.appendChild(btn);
-    });
+    let currentUser = null;
+    let gameState = {
+      running: false,
+      multiplier: 1.00,
+      crashPoint: 0,
+      betAmount: 0,
+      cashedOut: false,
+      history: [],
+      roundId: 1000
+    };
 
-    // ========== RENDER CONTENT ==========
-    const content = document.getElementById('content');
-    sections.forEach(s => {
-      const div = document.createElement('div');
-      div.className = 'section';
-      div.id = `section-${s.id}`;
-      div.innerHTML = `
-        <h2><span class="num">${s.id}</span> ${s.title}</h2>
-        ${s.content}
-      `;
-      content.appendChild(div);
-    });
-
-    // ========== SHOW SECTION ==========
-    function showSection(id) {
-      document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
-      document.querySelectorAll('nav button').forEach(btn => btn.classList.remove('active'));
-
-      document.getElementById(`section-${id}`).classList.add('active');
-      document.querySelector(`nav button[data-id="${id}"]`).classList.add('active');
-
-      // Update URL hash without scrolling
-      history.replaceState(null, null, `#${id}`);
+    // ===================== AUTH =====================
+    function getUsers() {
+      return JSON.parse(localStorage.getItem('aviator_users') || '[]');
+    }
+    function saveUsers(users) {
+      localStorage.setItem('aviator_users', JSON.stringify(users));
+    }
+    function showError(msg) {
+      const el = document.getElementById('authError');
+      el.textContent = msg;
+      el.style.display = 'block';
+    }
+    function clearError() {
+      document.getElementById('authError').style.display = 'none';
+    }
+    function showLogin() {
+      clearError();
+      document.getElementById('loginForm').classList.remove('hidden');
+      document.getElementById('registerForm').classList.add('hidden');
+    }
+    function showRegister() {
+      clearError();
+      document.getElementById('loginForm').classList.add('hidden');
+      document.getElementById('registerForm').classList.remove('hidden');
     }
 
-    // ========== INITIAL LOAD ==========
-    const hash = parseInt(location.hash.slice(1));
-    showSection(hash >= 1 && hash <= 12 ? hash : 1);
-  </script>
-</body>
-</html>
+    function doRegister() {
+      clearError();
+      const email = document.getElementById('regEmail').value.trim().toLowerCase();
+      const pass = document.getElementById('regPass').value;
+      const name = document.getElementById('regName').value.trim() || 'Player';
+
+      if (!email || !pass) return showError('Email and password required');
+      if (pass.length < 6) return showError('Password must be at least 6 characters');
+
+      const users = getUsers();
+      if (users.find(u => u.email === email)) return showError('Email already registered');
+
+      const user = {
+        email,
+        password: pass, // demo only – never store plain text in real apps
+        name,
+        balance: 1000.00, // starting bonus
+        verified: false,
+        created: new Date().toISOString(),
+        history: [],
+        notifications: [
+          { id: 1, text: 'Welcome! $1000 demo balance credited.', time: new Date().toLocaleString() }
+        ],
+        limits: { deposit: 5000, loss: 2000, session: 120 },
+        twoFA: false
+      };
+      users.push(user);
+      saveUsers(users);
+      currentUser = user;
+      enterApp();
+    }
+
+    function doLogin() {
+      clearError();
+      const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+      const pass = document.getElementById('loginPass').value;
+
+      const users = getUsers();
+      const user = users.find(u => u.email === email && u.password === pass);
+      if (!user) return showError('Invalid email or password');
+
+      currentUser = user;
+      enterApp();
+    }
+
+    function logout() {
+      currentUser = null;
+      document.getElementById('app').style.display = 'none';
+      document.getElementById('authScreen').style.display = 'flex';
+      showLogin();
+    }
+
+    function enterApp() {
+      document.getElementById('authScreen').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      document.getElementById('userBtn').textContent = currentUser.name + ' ▾';
+      updateBalance();
+      buildSidebar();
+      showSection(6); // start on game
+    }
+
+    function updateBalance() {
+      document.getElementById('headerBalance').textContent = currentUser.balance.toFixed(2);
+      // also update any wallet display if open
+      const el = document.getElementById('walletBalance');
+      if (el) el.textContent = currentUser.balance.toFixed(2);
+    }
+
+    function saveCurrentUser() {
+      const users = getUsers();
+      const idx = users.findIndex(u => u.email === currentUser.email);
+      if (idx !== -1) {
+        users[idx] = currentUser;
+        saveUsers(users);
+      }
+    }
+
+    // ===================== SIDEBAR & SECTIONS =====================
+    function buildSidebar() {
+      const nav = document.getElementById('sidebar');
+      nav.innerHTML = '';
+      SECTIONS.forEach(s => {
+        const btn = document.createElement('button');
+        btn.innerHTML = `<span>${s.id}</span> ${s.title}`;
+        btn.dataset.id = s.id;
+        btn.onclick = () => showSection(s.id);
+        nav.appendChild(btn);
+      });
+    }
+
+    function showSection(id) {
+      document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+      const btn = document.querySelector(`nav button[data-id="${id}"]`);
+      if (btn) btn.classList.add('active');
+
+      const main = document.getElementById('mainContent');
+      main.innerHTML = '';
+
+      const section = document.createElement('div');
+      section.className = 'section active';
+      section.innerHTML = getSectionHTML(id);
+      main.appendChild(section);
+
+      if (id === 6) initGame();
+      if (id === 7) renderHistory();
+    }
+
+    function getSectionHTML(id) {
+      switch (id) {
+        case 1:
+          return `
+            <h2><span class="num">1</span> Registration</h2>
+            <div class="card">
+              <p>You are already registered as <strong>${currentUser.email}</strong>.</p>
+              <p>Account created: ${new Date(currentUser.created).toLocaleString()}</p>
+              <p>Starting bonus of $1000 was credited on registration.</p>
+            </div>`;
+        case 2:
+          return `
+            <h2><span class="num">2</span> Login</h2>
+            <div class="card">
+              <p>You are currently logged in.</p>
+              <p>Last login: just now</p>
+              <button class="btn btn-secondary" style="width:auto;margin-top:1rem" onclick="logout()">Log Out</button>
+            </div>`;
+        case 3:
+          return `
+            <h2><span class="num">3</span> Profile</h2>
+            <div class="card">
+              <div class="form-group">
+                <label>Display Name</label>
+                <input type="text" id="profileName" value="${currentUser.name}" />
+              </div>
+              <div class="form-group">
+                <label>Email</label>
+                <input type="text" value="${currentUser.email}" disabled />
+              </div>
+              <button class="btn btn-primary" style="width:auto" onclick="saveProfile()">Save Changes</button>
+            </div>`;
+        case 4:
+          return `
+            <h2><span class="num">4</span> Identity verification</h2>
+            <div class="card">
+              <p>Status: <strong>${currentUser.verified ? 'Verified ✓' : 'Not verified'}</strong></p>
+              ${!currentUser.verified ? `
+                <p>Upload ID and selfie to unlock higher limits.</p>
+                <button class="btn btn-primary" style="width:auto;margin-top:0.8rem" onclick="mockVerify()">Simulate Verification</button>
+              ` : '<p class="tip">Your identity has been verified. Higher limits are now available.</p>'}
+            </div>`;
+        case 5:
+          return `
+            <h2><span class="num">5</span> Virtual wallet</h2>
+            <div class="card">
+              <h3>Current Balance: \( <span id="walletBalance"> \){currentUser.balance.toFix
