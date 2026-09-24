@@ -3,1279 +3,688 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Alpha Flight Demo</title>
-
+<title>Aviator Game – Full Demo</title>
 <style>
-* {
-    box-sizing: border-box;
-}
-
-body {
-    margin: 0;
-    background: #070707;
-    color: white;
-    font-family: Arial, sans-serif;
-}
-
-header {
-    background: #111;
-    padding: 15px;
+  :root {
+    --bg: #0d0d0d;
+    --card: #1a1a1a;
+    --accent: #e63946;
+    --green: #00c853;
+    --yellow: #ffd600;
+    --text: #f0f0f0;
+    --muted: #888;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid #333;
-}
-
-.logo {
-    font-size: 22px;
-    font-weight: bold;
-}
-
-.container {
-    max-width: 900px;
-    margin: auto;
-    padding: 15px;
-}
-
-.card {
-    background: #111;
-    border: 1px solid #292929;
-    border-radius: 12px;
-    padding: 18px;
-    margin-bottom: 15px;
-}
-
-input, button, select {
+    flex-direction: column;
+  }
+  .hidden { display: none !important; }
+  .page { min-height: 100vh; padding: 20px; max-width: 480px; margin: 0 auto; width: 100%; }
+  h1, h2 { margin-bottom: 16px; }
+  input, button, select {
     width: 100%;
-    padding: 13px;
-    margin: 6px 0;
-    border-radius: 8px;
-    border: 1px solid #444;
-    background: #1b1b1b;
-    color: white;
-}
-
-button {
-    background: #e21b23;
+    padding: 14px;
+    margin: 8px 0;
+    border-radius: 10px;
     border: none;
-    font-weight: bold;
+    font-size: 16px;
+  }
+  input, select { background: #2a2a2a; color: white; }
+  button {
+    background: var(--accent);
+    color: white;
+    font-weight: 600;
     cursor: pointer;
-}
+    transition: 0.2s;
+  }
+  button:hover { opacity: 0.9; }
+  button.secondary { background: #333; }
+  button.green { background: var(--green); }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
 
-button:hover {
-    opacity: .85;
-}
-
-.secondary {
-    background: #292929;
-}
-
-.hidden {
-    display: none;
-}
-
-nav {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
+  /* NAV */
+  .nav {
+    display: flex;
     gap: 6px;
-    margin-bottom: 15px;
-}
-
-nav button {
-    font-size: 12px;
-    background: #191919;
-}
-
-.balance {
-    font-size: 25px;
-    font-weight: bold;
-}
-
-.game {
-    position: relative;
-    height: 400px;
-    background: radial-gradient(circle at center, #151515, #050505);
-    overflow: hidden;
-    border-radius: 12px;
-    border: 1px solid #333;
-}
-
-#graph {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    left: 0;
-    top: 0;
-}
-
-.plane {
-    position: absolute;
-    font-size: 40px;
-    left: 8%;
-    bottom: 12%;
-    transition: left .15s linear, bottom .15s linear;
-    filter: drop-shadow(0 0 8px #ff3333);
-}
-
-.multiplier {
-    position: absolute;
-    top: 35%;
-    width: 100%;
-    text-align: center;
-    font-size: 55px;
-    font-weight: bold;
-    z-index: 2;
-}
-
-.status {
-    text-align: center;
-    color: #aaa;
-}
-
-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-td, th {
+    overflow-x: auto;
+    padding: 10px 0;
+    margin-bottom: 12px;
     border-bottom: 1px solid #333;
-    padding: 9px;
-    text-align: left;
-}
-
-.success {
-    color: #35e36d;
-}
-
-.warning {
-    color: #ffcc33;
-}
-
-.danger {
-    color: #ff4c4c;
-}
-
-.menu-title {
-    margin-top: 5px;
-}
-
-.notice {
-    background: #1c1600;
-    border: 1px solid #705900;
-    padding: 12px;
-    border-radius: 8px;
+  }
+  .nav button {
+    flex: 0 0 auto;
+    padding: 8px 14px;
     font-size: 13px;
-}
+    background: #222;
+  }
+  .nav button.active { background: var(--accent); }
 
-@media(max-width:600px) {
-    .game {
-        height: 330px;
-    }
+  /* GAME AREA */
+  #gameCanvas {
+    width: 100%;
+    height: 280px;
+    background: linear-gradient(to bottom, #0a1a2a, #001122);
+    border-radius: 12px;
+    display: block;
+    margin-bottom: 12px;
+  }
+  .multiplier {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 48px;
+    font-weight: 800;
+    color: white;
+    text-shadow: 0 0 20px rgba(0,0,0,0.8);
+    pointer-events: none;
+  }
+  .game-wrap { position: relative; }
+  .bet-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .bet-box {
+    flex: 1;
+    background: var(--card);
+    padding: 12px;
+    border-radius: 12px;
+  }
+  .balance {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--green);
+    margin-bottom: 12px;
+  }
+  .history-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 12px 0;
+  }
+  .chip {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .chip.low { background: #1b5e20; }
+  .chip.mid { background: #e65100; }
+  .chip.high { background: #b71c1c; }
 
-    .multiplier {
-        font-size: 42px;
-    }
-}
+  .card {
+    background: var(--card);
+    padding: 16px;
+    border-radius: 12px;
+    margin-bottom: 12px;
+  }
+  .status { color: var(--muted); font-size: 14px; margin-top: 8px; }
+  .success { color: var(--green); }
+  .error { color: var(--accent); }
 </style>
 </head>
-
 <body>
 
-<header>
-    <div class="logo">✈️ ALPHA FLIGHT</div>
-    <div id="headerUser">Guest</div>
-</header>
-
-<div class="container">
-
-<!-- ========================= -->
-<!-- REGISTRATION -->
-<!-- ========================= -->
-
-<section id="registration" class="card">
-    <h2>1. Registration</h2>
-
-    <input id="regUsername"
-           placeholder="Username">
-
-    <input id="regPhone"
-           placeholder="Phone number">
-
-    <input id="regPassword"
-           type="password"
-           placeholder="Password">
-
-    <button onclick="register()">
-        Create Demo Account
-    </button>
-
-    <p id="registerMessage"></p>
-
-    <button class="secondary"
-            onclick="showSection('login')">
-        Already have an account? Login
-    </button>
-</section>
-
-
-<!-- ========================= -->
-<!-- LOGIN -->
-<!-- ========================= -->
-
-<section id="login" class="card hidden">
-
-    <h2>2. Login</h2>
-
-    <input id="loginPhone"
-           placeholder="Phone number">
-
-    <input id="loginPassword"
-           type="password"
-           placeholder="Password">
-
-    <button onclick="login()">
-        Login
-    </button>
-
-    <p id="loginMessage"></p>
-
-    <button class="secondary"
-            onclick="showSection('registration')">
-        Create Account
-    </button>
-
-</section>
-
-
-<!-- ========================= -->
-<!-- APPLICATION -->
-<!-- ========================= -->
-
-<div id="app" class="hidden">
-
-<nav>
-    <button onclick="showSection('profile')">Profile</button>
-    <button onclick="showSection('verification')">Verification</button>
-    <button onclick="showSection('wallet')">Wallet</button>
-    <button onclick="showSection('gameSection')">Game</button>
-    <button onclick="showSection('history')">History</button>
-    <button onclick="showSection('notifications')">Notifications</button>
-    <button onclick="showSection('security')">Security</button>
-    <button onclick="showSection('responsible')">Controls</button>
-    <button onclick="showSection('support')">Support</button>
-    <button onclick="showSection('financial')">Notice</button>
-    <button onclick="logout()">Logout</button>
-</nav>
-
-
-<!-- ========================= -->
-<!-- PROFILE -->
-<!-- ========================= -->
-
-<section id="profile" class="card hidden">
-
-<h2>3. Profile</h2>
-
-<p>Username:</p>
-<h3 id="profileUsername"></h3>
-
-<p>Phone:</p>
-<h3 id="profilePhone"></h3>
-
-<p>Account type:</p>
-<h3>Demo Account</h3>
-
-</section>
-
-
-<!-- ========================= -->
-<!-- VERIFICATION -->
-<!-- ========================= -->
-
-<section id="verification" class="card hidden">
-
-<h2>4. Identity Verification</h2>
-
-<div class="notice">
-This is only a demonstration verification screen.
-No real identity documents are collected or stored.
+<!-- ========== 1. REGISTRATION ========== -->
+<div id="page-register" class="page">
+  <h1>✈️ Aviator</h1>
+  <h2>1. Registration</h2>
+  <input type="text" id="reg-name" placeholder="Full Name">
+  <input type="tel" id="reg-phone" placeholder="Phone Number (e.g. 07XXXXXXXX)">
+  <input type="email" id="reg-email" placeholder="Email">
+  <input type="password" id="reg-pass" placeholder="Password (min 6 chars)">
+  <button onclick="doRegister()">Create Account</button>
+  <p class="status">Already have an account? <a href="#" onclick="showPage('login')" style="color:var(--accent)">Login</a></p>
+  <p id="reg-msg" class="status"></p>
 </div>
 
-<p>Status:</p>
-
-<h3 class="warning">
-● Verification pending
-</h3>
-
-<button onclick="demoVerify()">
-Mark Demo Verification Complete
-</button>
-
-</section>
-
-
-<!-- ========================= -->
-<!-- WALLET -->
-<!-- ========================= -->
-
-<section id="wallet" class="card hidden">
-
-<h2>5. Virtual Wallet</h2>
-
-<p>Demo Points Balance</p>
-
-<div class="balance">
-<span id="walletBalance">5000</span> DP
+<!-- ========== 2. LOGIN ========== -->
+<div id="page-login" class="page hidden">
+  <h1>✈️ Aviator</h1>
+  <h2>2. Login</h2>
+  <input type="tel" id="login-phone" placeholder="Phone Number">
+  <input type="password" id="login-pass" placeholder="Password">
+  <button onclick="doLogin()">Login</button>
+  <p class="status">No account? <a href="#" onclick="showPage('register')" style="color:var(--accent)">Register</a></p>
+  <p id="login-msg" class="status"></p>
 </div>
 
-<br>
+<!-- ========== MAIN APP (after login) ========== -->
+<div id="page-app" class="page hidden">
+  <div class="nav" id="main-nav">
+    <button onclick="showSection('game')" class="active" data-sec="game">Game</button>
+    <button onclick="showSection('profile')" data-sec="profile">Profile</button>
+    <button onclick="showSection('kyc')" data-sec="kyc">KYC</button>
+    <button onclick="showSection('wallet')" data-sec="wallet">Wallet</button>
+    <button onclick="showSection('history')" data-sec="history">History</button>
+    <button onclick="showSection('notif')" data-sec="notif">Alerts</button>
+    <button onclick="showSection('security')" data-sec="security">Security</button>
+    <button onclick="showSection('responsible')" data-sec="responsible">Responsible</button>
+    <button onclick="showSection('support')" data-sec="support">Support</button>
+    <button onclick="showSection('finance')" data-sec="finance">Finance</button>
+  </div>
 
-<div class="notice">
-DP means Demo Points. They have no cash value and cannot be withdrawn.
+  <!-- 6. GAME AREA -->
+  <div id="sec-game">
+    <div class="balance">Balance: <span id="bal-display">0</span> KES</div>
+    <div class="game-wrap">
+      <canvas id="gameCanvas" width="400" height="280"></canvas>
+      <div class="multiplier" id="multi-display">1.00x</div>
+    </div>
+    <div class="history-chips" id="round-history"></div>
+    <div class="bet-row">
+      <div class="bet-box">
+        <label>Bet 1</label>
+        <input type="number" id="bet1" value="10" min="1">
+        <input type="number" id="auto1" placeholder="Auto cashout (e.g. 2.00)" step="0.01">
+        <button id="btn-bet1" class="green" onclick="placeBet(1)">BET</button>
+        <button id="btn-cash1" class="hidden" onclick="cashOut(1)">CASH OUT</button>
+      </div>
+      <div class="bet-box">
+        <label>Bet 2</label>
+        <input type="number" id="bet2" value="10" min="1">
+        <input type="number" id="auto2" placeholder="Auto cashout" step="0.01">
+        <button id="btn-bet2" class="green" onclick="placeBet(2)">BET</button>
+        <button id="btn-cash2" class="hidden" onclick="cashOut(2)">CASH OUT</button>
+      </div>
+    </div>
+    <p class="status" id="game-status">Waiting for next round...</p>
+  </div>
+
+  <!-- 3. PROFILE -->
+  <div id="sec-profile" class="hidden">
+    <h2>3. Profile</h2>
+    <div class="card">
+      <p><strong>Name:</strong> <span id="p-name"></span></p>
+      <p><strong>Phone:</strong> <span id="p-phone"></span></p>
+      <p><strong>Email:</strong> <span id="p-email"></span></p>
+      <p><strong>Member since:</strong> <span id="p-date"></span></p>
+    </div>
+    <button class="secondary" onclick="logout()">Logout</button>
+  </div>
+
+  <!-- 4. IDENTITY VERIFICATION -->
+  <div id="sec-kyc" class="hidden">
+    <h2>4. Identity Verification</h2>
+    <div class="card">
+      <p>Status: <span id="kyc-status">Not verified</span></p>
+      <input type="text" id="kyc-id" placeholder="ID / Passport Number">
+      <select id="kyc-doc">
+        <option>National ID</option>
+        <option>Passport</option>
+        <option>Driving License</option>
+      </select>
+      <button onclick="submitKYC()">Submit Documents</button>
+      <p id="kyc-msg" class="status"></p>
+    </div>
+  </div>
+
+  <!-- 5. VIRTUAL WALLET -->
+  <div id="sec-wallet" class="hidden">
+    <h2>5. Virtual Wallet</h2>
+    <div class="card">
+      <p class="balance">Available: <span id="w-bal">0</span> KES</p>
+      <input type="number" id="dep-amount" placeholder="Deposit amount" min="10">
+      <button class="green" onclick="deposit()">Deposit (Mock)</button>
+      <input type="number" id="wd-amount" placeholder="Withdraw amount" min="10">
+      <button onclick="withdraw()">Withdraw (Mock)</button>
+      <p id="wallet-msg" class="status"></p>
+    </div>
+  </div>
+
+  <!-- 7. GAME HISTORY -->
+  <div id="sec-history" class="hidden">
+    <h2>7. Game History</h2>
+    <div class="card" id="full-history">
+      <p class="status">No bets yet.</p>
+    </div>
+  </div>
+
+  <!-- 8. NOTIFICATIONS -->
+  <div id="sec-notif" class="hidden">
+    <h2>8. Notifications</h2>
+    <div class="card" id="notif-list">
+      <p>• Welcome to Aviator Demo!</p>
+      <p>• Responsible gaming tools are available.</p>
+    </div>
+  </div>
+
+  <!-- 9. SECURITY -->
+  <div id="sec-security" class="hidden">
+    <h2>9. Security</h2>
+    <div class="card">
+      <input type="password" id="new-pass" placeholder="New password">
+      <button onclick="changePassword()">Change Password</button>
+      <label style="display:flex;align-items:center;gap:8px;margin:12px 0">
+        <input type="checkbox" id="tfa" onchange="toggle2FA()"> Enable 2FA (mock)
+      </label>
+      <p id="sec-msg" class="status"></p>
+    </div>
+  </div>
+
+  <!-- 10. RESPONSIBLE-USE CONTROLS -->
+  <div id="sec-responsible" class="hidden">
+    <h2>10. Responsible-use Controls</h2>
+    <div class="card">
+      <label>Daily Deposit Limit (KES)</label>
+      <input type="number" id="dep-limit" value="5000">
+      <label>Session Time Limit (minutes)</label>
+      <input type="number" id="session-limit" value="60">
+      <button onclick="saveLimits()">Save Limits</button>
+      <button class="secondary" onclick="selfExclude()">Self-Exclude 24h</button>
+      <p id="resp-msg" class="status"></p>
+    </div>
+  </div>
+
+  <!-- 11. SUPPORT -->
+  <div id="sec-support" class="hidden">
+    <h2>11. Support</h2>
+    <div class="card">
+      <p>📧 support@aviator-demo.com</p>
+      <p>📞 +254 700 000 000 (mock)</p>
+      <p>Live chat: available 24/7 in real product</p>
+      <textarea id="support-msg" rows="3" placeholder="Describe your issue..." style="width:100%;margin:8px 0;padding:10px;border-radius:8px;background:#2a2a2a;color:white;border:none"></textarea>
+      <button onclick="sendSupport()">Send Message</button>
+      <p id="support-status" class="status"></p>
+    </div>
+  </div>
+
+  
+  <!-- 12. FINANCIAL FUNCTIONS NOTICE -->
+  <div id="sec-finance" class="hidden">
+    <h2>12. Financial Functions Notice</h2>
+    <div class="card">
+      <p>This is a <strong>demo / educational</strong> application.</p>
+      <ul style="margin:12px 0 12px 20px; line-height:1.6">
+        <li>No real money is involved.</li>
+        <li>All balances and transactions are simulated with localStorage.</li>
+        <li>In a real regulated platform, deposits, withdrawals and games would be subject to licensing, AML, responsible gambling rules and tax (e.g. 5% withholding in Kenya).</li>
+        <li>Always play only on licensed operators and within your means.</li>
+      </ul>
+      <p class="status">Gambling can be addictive. Please play responsibly.</p>
+    </div>
+  </div>
 </div>
-
-</section>
-
-
-<!-- ========================= -->
-<!-- GAME -->
-<!-- ========================= -->
-
-<section id="gameSection" class="card hidden">
-
-<h2>6. Game Area</h2>
-
-<div class="game">
-
-<canvas id="graph"></canvas>
-
-<div id="plane"
-     class="plane">
-✈️
-</div>
-
-<div id="multiplier"
-     class="multiplier">
-1.00x
-</div>
-
-</div>
-
-<p id="gameStatus"
-   class="status">
-Ready for demo flight
-</p>
-
-<button id="startButton"
-        onclick="startGame()">
-START DEMO FLIGHT
-</button>
-
-</section>
-
-
-<!-- ========================= -->
-<!-- HISTORY -->
-<!-- ========================= -->
-
-<section id="history" class="card hidden">
-
-<h2>7. Game History</h2>
-
-<table>
-
-<thead>
-<tr>
-<th>#</th>
-<th>Result</th>
-<th>Time</th>
-</tr>
-</thead>
-
-<tbody id="historyTable">
-</tbody>
-
-</table>
-
-</section>
-
-
-<!-- ========================= -->
-<!-- NOTIFICATIONS -->
-<!-- ========================= -->
-
-<section id="notifications" class="card hidden">
-
-<h2>8. Notifications</h2>
-
-<div id="notificationsList">
-
-<p>🔔 Welcome to Alpha Flight Demo.</p>
-
-<p>🔔 Your demo account received 5,000 DP.</p>
-
-</div>
-
-</section>
-
-
-<!-- ========================= -->
-<!-- SECURITY -->
-<!-- ========================= -->
-
-<section id="security" class="card hidden">
-
-<h2>9. Security</h2>
-
-<p>Account security status:</p>
-
-<p class="success">
-● Basic protection enabled
-</p>
-
-<p>Password authentication: Enabled</p>
-
-<p>Local demo storage: Enabled</p>
-
-<div class="notice">
-For a real production application, authentication should be handled by a secure backend rather than browser localStorage.
-</div>
-
-</section>
-
-
-<!-- ========================= -->
-<!-- RESPONSIBLE USE -->
-<!-- ========================= -->
-
-<section id="responsible" class="card hidden">
-
-<h2>10. Responsible-Use Controls</h2>
-
-<label>
-<input type="checkbox"
-       id="soundControl"
-       checked
-       style="width:auto">
- Enable game voice
-</label>
-
-<br><br>
-
-<label>
-<input type="checkbox"
-       id="demoReminder"
-       checked
-       style="width:auto">
- Show demo reminder
-</label>
-
-<p class="warning">
-This website is a demonstration using virtual points only.
-</p>
-
-</section>
-
-
-<!-- ========================= -->
-<!-- SUPPORT -->
-<!-- ========================= -->
-
-<section id="support" class="card hidden">
-
-<h2>11. Support</h2>
-
-<input id="supportSubject"
-       placeholder="Subject">
-
-<textarea id="supportMessage"
-          placeholder="Describe your issue"
-          style="width:100%;height:120px;background:#1b1b1b;color:white;border:1px solid #444;border-radius:8px;padding:10px"></textarea>
-
-<button onclick="sendSupport()">
-Send Demo Support Request
-</button>
-
-<p id="supportResult"></p>
-
-</section>
-
-
-<!-- ========================= -->
-<!-- FINANCIAL NOTICE -->
-<!-- ========================= -->
-
-<section id="financial" class="card hidden">
-
-<h2>12. Financial Functions Notice</h2>
-
-<div class="notice">
-
-<strong>Important:</strong>
-
-<p>
-This version is a virtual-points demonstration.
-It does not process deposits, withdrawals,
-real-money wagers, or financial transactions.
-</p>
-
-<p>
-The 5,000 DP starting balance is fictional
-and has no monetary value.
-</p>
-
-</div>
-
-</section>
-
-</div>
-</div>
-
 
 <script>
+// ========== STATE ==========
+let user = null;
+let balance = 0;
+let currentMulti = 1.00;
+let crashPoint = 0;
+let isFlying = false;
+let gameInterval = null;
+let bets = { 1: null, 2: null };
+let history = [];
+let roundHistory = [];
+let canvas, ctx;
+let planeX = 40, planeY = 220;
+let voiceEnabled = true;
 
-/* =====================================================
-   ALPHA FLIGHT DEMO
-   ===================================================== */
-
-let currentUser = null;
-let balance = 5000;
-
-let gameRunning = false;
-let multiplier = 1.00;
-
-let animationTimer;
-let crashPoint;
-
-
-/* =========================
-   LOCAL STORAGE
-   ========================= */
-
-function saveUser(user) {
-
-    localStorage.setItem(
-        "alphaUser",
-        JSON.stringify(user)
-    );
+// ========== PAGES ==========
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+  document.getElementById('page-' + name).classList.remove('hidden');
 }
 
-
-function getUser() {
-
-    return JSON.parse(
-        localStorage.getItem("alphaUser")
-    );
+function showSection(sec) {
+  document.querySelectorAll('[id^="sec-"]').forEach(s => s.classList.add('hidden'));
+  document.getElementById('sec-' + sec).classList.remove('hidden');
+  document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.nav button[data-sec="${sec}"]`)?.classList.add('active');
+  if (sec === 'profile') updateProfile();
+  if (sec === 'wallet') document.getElementById('w-bal').textContent = balance.toFixed(2);
+  if (sec === 'history') renderFullHistory();
 }
 
-
-/* =========================
-   REGISTRATION
-   ========================= */
-
-function register() {
-
-    const username =
-        document.getElementById("regUsername").value.trim();
-
-    const phone =
-        document.getElementById("regPhone").value.trim();
-
-    const password =
-        document.getElementById("regPassword").value;
-
-    const message =
-        document.getElementById("registerMessage");
-
-
-    if (!username || !phone || !password) {
-
-        message.innerHTML =
-            "<span class='danger'>Please fill in all fields.</span>";
-
-        return;
-    }
-
-
-    const user = {
-
-        username: username,
-
-        phone: phone,
-
-        password: password,
-
-        balance: 5000,
-
-        history: []
-
-    };
-
-
-    saveUser(user);
-
-    message.innerHTML =
-        "<span class='success'>Account created successfully. You can now login.</span>";
-
-    document.getElementById("regUsername").value = "";
-    document.getElementById("regPhone").value = "";
-    document.getElementById("regPassword").value = "";
-
+// ========== AUTH ==========
+function doRegister() {
+  const name = document.getElementById('reg-name').value.trim();
+  const phone = document.getElementById('reg-phone').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const pass = document.getElementById('reg-pass').value;
+  const msg = document.getElementById('reg-msg');
+  if (!name || !phone || pass.length < 6) {
+    msg.textContent = 'Fill all fields. Password min 6 characters.';
+    msg.className = 'status error';
+    return;
+  }
+  const users = JSON.parse(localStorage.getItem('avi_users') || '{}');
+  if (users[phone]) {
+    msg.textContent = 'Phone already registered. Please login.';
+    msg.className = 'status error';
+    return;
+  }
+  users[phone] = { name, phone, email, pass, created: new Date().toISOString(), kyc: false, balance: 1000 };
+  localStorage.setItem('avi_users', JSON.stringify(users));
+  msg.textContent = 'Account created! Redirecting to login...';
+  msg.className = 'status success';
+  setTimeout(() => showPage('login'), 1200);
 }
 
-
-/* =========================
-   LOGIN
-   ========================= */
-
-function login() {
-
-    const phone =
-        document.getElementById("loginPhone").value.trim();
-
-    const password =
-        document.getElementById("loginPassword").value;
-
-    const user = getUser();
-
-    const message =
-        document.getElementById("loginMessage");
-
-
-    if (!user) {
-
-        message.innerHTML =
-            "<span class='danger'>No account found. Please register first.</span>";
-
-        return;
-    }
-
-
-    if (
-        phone !== user.phone ||
-        password !== user.password
-    ) {
-
-        message.innerHTML =
-            "<span class='danger'>Incorrect phone or password.</span>";
-
-        return;
-    }
-
-
-    currentUser = user;
-
-    balance = user.balance;
-
-    document.getElementById("headerUser").innerText =
-        currentUser.username;
-
-    document.getElementById("app").classList.remove("hidden");
-
-    showSection("gameSection");
-
-    updateProfile();
-
-    updateWallet();
-
+function doLogin() {
+  const phone = document.getElementById('login-phone').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  const msg = document.getElementById('login-msg');
+  const users = JSON.parse(localStorage.getItem('avi_users') || '{}');
+  if (!users[phone] || users[phone].pass !== pass) {
+    msg.textContent = 'Invalid phone or password.';
+    msg.className = 'status error';
+    return;
+  }
+  user = users[phone];
+  balance = user.balance || 1000;
+  localStorage.setItem('avi_current', phone);
+  showPage('app');
+  showSection('game');
+  updateBalance();
+  startGameLoop();
+  speak('Welcome to Aviator. Good luck!');
 }
-
-
-/* =========================
-   LOGOUT
-   ========================= */
 
 function logout() {
-
-    currentUser = null;
-
-    document.getElementById("app")
-        .classList.add("hidden");
-
-    document.getElementById("headerUser")
-        .innerText = "Guest";
-
-    showSection("login");
-
+  user = null;
+  localStorage.removeItem('avi_current');
+  clearInterval(gameInterval);
+  showPage('login');
 }
 
-
-/* =========================
-   SECTION NAVIGATION
-   ========================= */
-
-function showSection(id) {
-
-    const sections =
-        document.querySelectorAll(
-            "#app section"
-        );
-
-    sections.forEach(section => {
-
-        section.classList.add("hidden");
-
-    });
-
-
-    const selected =
-        document.getElementById(id);
-
-    if (selected) {
-
-        selected.classList.remove("hidden");
-
-    }
-
-}
-
-
-/* =========================
-   PROFILE
-   ========================= */
-
+// ========== PROFILE / KYC / WALLET ==========
 function updateProfile() {
-
-    if (!currentUser) return;
-
-    document.getElementById(
-        "profileUsername"
-    ).innerText = currentUser.username;
-
-    document.getElementById(
-        "profilePhone"
-    ).innerText = currentUser.phone;
-
+  if (!user) return;
+  document.getElementById('p-name').textContent = user.name;
+  document.getElementById('p-phone').textContent = user.phone;
+  document.getElementById('p-email').textContent = user.email || '—';
+  document.getElementById('p-date').textContent = new Date(user.created).toLocaleDateString();
 }
 
-
-/* =========================
-   WALLET
-   ========================= */
-
-function updateWallet() {
-
-    document.getElementById(
-        "walletBalance"
-    ).innerText = balance.toFixed(0);
-
+function submitKYC() {
+  const id = document.getElementById('kyc-id').value.trim();
+  if (!id) return;
+  user.kyc = true;
+  saveUser();
+  document.getElementById('kyc-status').textContent = 'Verified ✓';
+  document.getElementById('kyc-msg').textContent = 'Documents submitted successfully (demo).';
+  document.getElementById('kyc-msg').className = 'status success';
+  addNotif('Identity verification completed.');
 }
 
-
-/* =========================
-   DEMO VERIFICATION
-   ========================= */
-
-function demoVerify() {
-
-    alert(
-        "Demo verification completed."
-    );
-
+function deposit() {
+  const amt = parseFloat(document.getElementById('dep-amount').value);
+  if (!amt || amt < 10) return;
+  balance += amt;
+  saveUser();
+  updateBalance();
+  document.getElementById('wallet-msg').textContent = `Deposited ${amt} KES (mock)`;
+  document.getElementById('wallet-msg').className = 'status success';
+  addNotif(`Deposit of ${amt} KES received.`);
 }
 
-
-/* =========================
-   GRAPH
-   ========================= */
-
-const canvas =
-    document.getElementById("graph");
-
-const ctx =
-    canvas.getContext("2d");
-
-
-function resizeCanvas() {
-
-    canvas.width =
-        canvas.clientWidth;
-
-    canvas.height =
-        canvas.clientHeight;
-
+function withdraw() {
+  const amt = parseFloat(document.getElementById('wd-amount').value);
+  if (!amt || amt < 10 || amt > balance) {
+    document.getElementById('wallet-msg').textContent = 'Invalid amount or insufficient balance.';
+    document.getElementById('wallet-msg').className = 'status error';
+    return;
+  }
+  balance -= amt;
+  saveUser();
+  updateBalance();
+  document.getElementById('wallet-msg').textContent = `Withdrawal of ${amt} KES requested (mock)`;
+  document.getElementById('wallet-msg').className = 'status success';
 }
 
-
-window.addEventListener(
-    "resize",
-    resizeCanvas
-);
-
-resizeCanvas();
-
-
-let graphPoints = [];
-
-
-function drawGraph() {
-
-    ctx.clearRect(
-        0,
-        0,
-        canvas.width,
-        canvas.height
-    );
-
-
-    if (graphPoints.length < 2)
-        return;
-
-
-    ctx.beginPath();
-
-
-    graphPoints.forEach(
-        (point, index) => {
-
-            if (index === 0) {
-
-                ctx.moveTo(
-                    point.x,
-                    point.y
-                );
-
-            } else {
-
-                ctx.lineTo(
-                    point.x,
-                    point.y
-                );
-
-            }
-
-        }
-    );
-
-
-    ctx.strokeStyle = "#ff3030";
-
-    ctx.lineWidth = 4;
-
-    ctx.stroke();
-
+function changePassword() {
+  const np = document.getElementById('new-pass').value;
+  if (np.length < 6) return;
+  user.pass = np;
+  saveUser();
+  document.getElementById('sec-msg').textContent = 'Password changed.';
+  document.getElementById('sec-msg').className = 'status success';
 }
 
-
-/* =========================
-   START GAME
-   ========================= */
-
-function startGame() {
-
-    if (gameRunning)
-        return;
-
-
-    gameRunning = true;
-
-    multiplier = 1.00;
-
-    graphPoints = [];
-
-
-    document.getElementById(
-        "startButton"
-    ).disabled = true;
-
-
-    document.getElementById(
-        "gameStatus"
-    ).innerText =
-        "Flight in progress...";
-
-
-    /*
-       Random demo ending.
-       No real-money betting.
-    */
-
-    crashPoint =
-        1.30 +
-        Math.random() * 5.5;
-
-
-    let startTime =
-        Date.now();
-
-
-    speak(
-        "Flight started"
-    );
-
-
-    animationTimer =
-        setInterval(() => {
-
-            const elapsed =
-                (Date.now() - startTime) / 1000;
-
-
-            multiplier =
-                1 +
-                elapsed * 0.45 +
-                elapsed * elapsed * 0.025;
-
-
-            multiplier =
-                Number(
-                    multiplier.toFixed(2)
-                );
-
-
-            document.getElementById(
-                "multiplier"
-            ).innerText =
-                multiplier.toFixed(2) + "x";
-
-
-            movePlane();
-
-            drawGraph();
-
-
-            if (
-                multiplier >=
-                crashPoint
-            ) {
-
-                endGame();
-
-            }
-
-        }, 100);
-
+function toggle2FA() {
+  document.getElementById('sec-msg').textContent = document.getElementById('tfa').checked ? '2FA enabled (mock)' : '2FA disabled';
 }
 
-
-/* =========================
-   PLANE MOVEMENT
-   ========================= */
-
-function movePlane() {
-
-    const plane =
-        document.getElementById("plane");
-
-
-    let progress =
-        Math.min(
-            (multiplier - 1) / 5,
-            1
-        );
-
-
-    plane.style.left =
-        (8 + progress * 78) + "%";
-
-
-    plane.style.bottom =
-        (12 + progress * 70) + "%";
-
-
-    graphPoints.push({
-
-        x:
-            canvas.width *
-            (0.08 + progress * 0.78),
-
-        y:
-            canvas.height *
-            (0.88 - progress * 0.70)
-
-    });
-
-
-    if (graphPoints.length > 100) {
-
-        graphPoints.shift();
-
-    }
-
+function saveLimits() {
+  document.getElementById('resp-msg').textContent = 'Limits saved.';
+  document.getElementById('resp-msg').className = 'status success';
 }
 
-
-/* =========================
-   END GAME
-   ========================= */
-
-function endGame() {
-
-    clearInterval(animationTimer);
-
-    gameRunning = false;
-
-
-    document.getElementById(
-        "startButton"
-    ).disabled = false;
-
-
-    document.getElementById(
-        "gameStatus"
-    ).innerText =
-        "Flight ended at " +
-        multiplier.toFixed(2) +
-        "x";
-
-
-    speak(
-        "Flight ended at " +
-        multiplier.toFixed(2) +
-        " times"
-    );
-
-
-    saveHistory(
-        multiplier.toFixed(2)
-    );
-
-
-    document.getElementById(
-        "startButton"
-    ).innerText =
-        "START NEXT DEMO FLIGHT";
-
-
-    setTimeout(() => {
-
-        resetPlane();
-
-    }, 1200);
-
+function selfExclude() {
+  alert('Self-exclusion activated for 24 hours (demo). You would be logged out in a real system.');
+  logout();
 }
-
-
-/* =========================
-   RESET PLANE
-   ========================= */
-
-function resetPlane() {
-
-    const plane =
-        document.getElementById("plane");
-
-    plane.style.left = "8%";
-
-    plane.style.bottom = "12%";
-
-    graphPoints = [];
-
-    drawGraph();
-
-    document.getElementById(
-        "multiplier"
-    ).innerText = "1.00x";
-
-}
-
-
-/* =========================
-   HISTORY
-   ========================= */
-
-function saveHistory(result) {
-
-    if (!currentUser)
-        return;
-
-
-    const record = {
-
-        result: result,
-
-        time:
-            new Date()
-            .toLocaleString()
-
-    };
-
-
-    currentUser.history =
-        currentUser.history || [];
-
-
-    currentUser.history.unshift(
-        record
-    );
-
-
-    if (
-        currentUser.history.length > 20
-    ) {
-
-        currentUser.history.pop();
-
-    }
-
-
-    saveUser(currentUser);
-
-    displayHistory();
-
-}
-
-
-/* =========================
-   DISPLAY HISTORY
-   ========================= */
-
-function displayHistory() {
-
-    const table =
-        document.getElementById(
-            "historyTable"
-        );
-
-
-    table.innerHTML = "";
-
-
-    if (
-        !currentUser ||
-        !currentUser.history
-    )
-        return;
-
-
-    currentUser.history.forEach(
-        (item, index) => {
-
-            const row =
-                document.createElement("tr");
-
-
-            row.innerHTML = `
-
-                <td>${index + 1}</td>
-
-                <td class="warning">
-                    ${item.result}x
-                </td>
-
-                <td>
-                    ${item.time}
-                </td>
-
-            `;
-
-
-            table.appendChild(row);
-
-        }
-    );
-
-}
-
-
-/* =========================
-   VOICE
-   ========================= */
-
-function speak(text) {
-
-    const control =
-        document.getElementById(
-            "soundControl"
-        );
-
-
-    if (
-        control &&
-        !control.checked
-    )
-        return;
-
-
-    if (
-        "speechSynthesis"
-        in window
-    ) {
-
-        window.speechSynthesis.cancel();
-
-
-        const speech =
-            new SpeechSynthesisUtterance(
-                text
-            );
-
-
-        speech.rate = 1;
-
-        speech.pitch = 1;
-
-
-        window.speechSynthesis.speak(
-            speech
-        );
-
-    }
-
-}
-
-
-/* =========================
-   SUPPORT
-   ========================= */
 
 function sendSupport() {
-
-    const subject =
-        document.getElementById(
-            "supportSubject"
-        ).value;
-
-
-    const message =
-        document.getElementById(
-            "supportMessage"
-        ).value;
-
-
-    if (!subject || !message) {
-
-        document.getElementById(
-            "supportResult"
-        ).innerText =
-            "Please complete both fields.";
-
-        return;
-
-    }
-
-
-    document.getElementById(
-        "supportResult"
-    ).innerHTML =
-        "<span class='success'>Demo support request created.</span>";
-
+  document.getElementById('support-status').textContent = 'Message sent. Support will reply soon (demo).';
+  document.getElementById('support-status').className = 'status success';
 }
 
+// ========== GAME CORE ==========
+function generateCrash() {
+  // Simple house-edge style crash point (approx 97% RTP)
+  const r = Math.random();
+  if (r < 0.03) return 1.00; // instant crash chance
+  return Math.max(1.00, Math.floor((0.97 / (1 - r)) * 100) / 100);
+}
 
-/* =========================
-   AUTO LOGIN CHECK
-   ========================= */
+function startGameLoop() {
+  if (gameInterval) clearInterval(gameInterval);
+  nextRound();
+}
 
-window.onload = function() {
+function nextRound() {
+  isFlying = false;
+  currentMulti = 1.00;
+  crashPoint = generateCrash();
+  planeX = 40;
+  planeY = 220;
+  document.getElementById('multi-display').textContent = '1.00x';
+  document.getElementById('game-status').textContent = 'Place your bets... Round starts in 5s';
+  document.getElementById('btn-bet1').disabled = false;
+  document.getElementById('btn-bet2').disabled = false;
+  document.getElementById('btn-cash1').classList.add('hidden');
+  document.getElementById('btn-cash2').classList.add('hidden');
+  document.getElementById('btn-bet1').classList.remove('hidden');
+  document.getElementById('btn-bet2').classList.remove('hidden');
 
-    const user = getUser();
+  setTimeout(() => {
+    if (!user) return;
+    isFlying = true;
+    document.getElementById('game-status').textContent = 'Plane is flying! Cash out before it crashes.';
+    document.getElementById('btn-bet1').disabled = true;
+    document.getElementById('btn-bet2').disabled = true;
+    speak('Plane taking off');
+    fly();
+  }, 5000);
+}
 
+function fly() {
+  const start = Date.now();
+  gameInterval = setInterval(() => {
+    if (!isFlying) return;
+    const elapsed = (Date.now() - start) / 1000;
+    currentMulti = Math.min(crashPoint, 1 + elapsed * 0.15 + Math.pow(elapsed, 1.4) * 0.02);
+    currentMulti = Math.floor(currentMulti * 100) / 100;
 
-    if (user) {
+    // plane movement
+    planeX = 40 + elapsed * 35;
+    planeY = 220 - Math.log(currentMulti) * 55;
 
-        currentUser = user;
+    document.getElementById('multi-display').textContent = currentMulti.toFixed(2) + 'x';
+    draw();
 
-        balance = user.balance || 5000;
+    // auto cashout
+    [1, 2].forEach(n => {
+      if (bets[n] && bets[n].auto && currentMulti >= bets[n].auto) {
+        cashOut(n);
+      }
+    });
 
+    if (currentMulti >= crashPoint) {
+      crash();
     }
+  }, 50);
+}
 
+function crash() {
+  isFlying = false;
+  clearInterval(gameInterval);
+  document.getElementById('multi-display').textContent = 'FLEW AWAY @ ' + crashPoint.toFixed(2) + 'x';
+  document.getElementById('game-status').textContent = 'Crashed at ' + crashPoint.toFixed(2) + 'x';
+  speak('Flew away at ' + crashPoint.toFixed(2));
 
-    displayHistory();
+  // lose any active bets
+  [1, 2].forEach(n => {
+    if (bets[n] && !bets[n].cashed) {
+      history.unshift({ multi: crashPoint, bet: bets[n].amount, win: 0, time: new Date() });
+      bets[n] = null;
+    }
+  });
 
+  roundHistory.unshift(crashPoint);
+  if (roundHistory.length > 20) roundHistory.pop();
+  renderRoundHistory();
+
+  setTimeout(nextRound, 3000);
+}
+
+function placeBet(n) {
+  const amount = parseFloat(document.getElementById('bet' + n).value);
+  const auto = parseFloat(document.getElementById('auto' + n).value) || 0;
+  if (!amount || amount < 1 || amount > balance) {
+    alert('Invalid bet amount');
+    return;
+  }
+  if (isFlying) return;
+  balance -= amount;
+  updateBalance();
+  bets[n] = { amount, auto, cashed: false };
+  document.getElementById('btn-bet' + n).classList.add('hidden');
+  document.getElementById('btn-cash' + n).classList.remove('hidden');
+  document.getElementById('game-status').textContent = `Bet ${n} placed: ${amount} KES`;
+}
+
+function cashOut(n) {
+  if (!bets[n] || bets[n].cashed || !isFlying) return;
+  const win = Math.floor(bets[n].amount * currentMulti * 100) / 100;
+  balance += win;
+  updateBalance();
+  bets[n].cashed = true;
+  history.unshift({ multi: currentMulti, bet: bets[n].amount, win, time: new Date() });
+  document.getElementById('btn-cash' + n).classList.add('hidden');
+  document.getElementById('game-status').textContent = `Cashed out Bet \( {n}: + \){win} KES @ ${currentMulti.toFixed(2)}x`;
+  speak('Cashed out ' + currentMulti.toFixed(2));
+  bets[n] = null;
+}
+
+// ========== DRAWING ==========
+function draw() {
+  if (!ctx) return;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // sky gradient already in CSS, just draw trail
+  ctx.beginPath();
+  ctx.strokeStyle = 'rgba(230,57,70,0.6)';
+  ctx.lineWidth = 3;
+  ctx.moveTo(40, 220);
+  // simple curve
+  for (let i = 0; i <= planeX - 40; i += 4) {
+    const m = 1 + (i / 35) * 0.15;
+    const y = 220 - Math.log(Math.max(1.01, m)) * 55;
+    ctx.lineTo(40 + i, y);
+  }
+  ctx.stroke();
+
+  // plane (simple triangle)
+  ctx.fillStyle = '#e63946';
+  ctx.beginPath();
+  ctx.moveTo(planeX, planeY);
+  ctx.lineTo(planeX - 18, planeY + 8);
+  ctx.lineTo(planeX - 18, planeY - 8);
+  ctx.closePath();
+  ctx.fill();
+
+  // wing
+  ctx.fillStyle = '#ff8a80';
+  ctx.fillRect(planeX - 14, planeY - 3, 10, 6);
+}
+
+function renderRoundHistory() {
+  const el = document.getElementById('round-history');
+  el.innerHTML = roundHistory.map(m => {
+    let cls = m < 2 ? 'low' : m < 10 ? 'mid' : 'high';
+    return `<span class="chip \( {cls}"> \){m.toFixed(2)}x</span>`;
+  }).join('');
+}
+
+function renderFullHistory() {
+  const el = document.getElementById('full-history');
+  if (!history.length) {
+    el.innerHTML = '<p class="status">No bets yet.</p>';
+    return;
+  }
+  el.innerHTML = history.slice(0, 30).map(h =>
+    `<p>${h.time.toLocaleTimeString()} — Bet ${h.bet} → ${h.win > 0 ? '<span class="success">+' + h.win + '</span>' : '<span class="error">Lost</span>'} @ ${h.multi.toFixed(2)}x</p>`
+  ).join('');
+}
+
+// ========== HELPERS ==========
+function updateBalance() {
+  document.getElementById('bal-display').textContent = balance.toFixed(2);
+  document.getElementById('w-bal').textContent = balance.toFixed(2);
+  if (user) {
+    user.balance = balance;
+    saveUser();
+  }
+}
+
+function saveUser() {
+  if (!user) return;
+  const users = JSON.parse(localStorage.getItem('avi_users') || '{}');
+  users[user.phone] = user;
+  localStorage.setItem('avi_users', JSON.stringify(users));
+}
+
+function addNotif(txt) {
+  const el = document.getElementById('notif-list');
+  el.innerHTML = `<p>• ${txt}</p>` + el.innerHTML;
+}
+
+function speak(text) {
+  if (!voiceEnabled || !window.speechSynthesis) return;
+  const u = new SpeechSynthesisUtterance(text);
+  u.rate = 1.1;
+  window.speechSynthesis.speak(u);
+}
+
+// ========== INIT ==========
+window.onload = () => {
+  canvas = document.getElementById('gameCanvas');
+  ctx = canvas.getContext('2d');
+  const saved = localStorage.getItem('avi_current');
+  if (saved) {
+    const users = JSON.parse(localStorage.getItem('avi_users') || '{}');
+    if (users[saved]) {
+      user = users[saved];
+      balance = user.balance || 1000;
+      showPage('app');
+      showSection('game');
+      updateBalance();
+      startGameLoop();
+      return;
+    }
+  }
+  showPage('register');
 };
-
 </script>
-
 </body>
 </html>
